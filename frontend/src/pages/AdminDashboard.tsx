@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, ShieldCheck, CheckCircle2, Trash2, Filter, Search, RefreshCcw, Eye, MapPin, X, Calendar, Share2, ArrowRight } from 'lucide-react';
+import { Lock, ShieldCheck, CheckCircle2, Trash2, Filter, Search, RefreshCcw, Eye, MapPin, X, ArrowRight } from 'lucide-react';
 import { adminFetchAllContent, rejectContent, supabase } from '../services/api';
 import { ASSAM_DISTRICTS } from '../utils/districts';
 
