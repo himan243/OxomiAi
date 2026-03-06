@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ASSAM_DISTRICTS } from '../utils/districts';
-import { Search, Calendar, Landmark, Sparkles, Filter, Heart, X, ArrowRight, Share2 } from 'lucide-react';
+import { 
+  Search, Calendar, Landmark, Sparkles, Filter, Heart, X, ArrowRight, Share2, 
+  Utensils, Palette, History, Map as MapIcon 
+} from 'lucide-react';
 import { fetchAllContent } from '../services/api';
 
 const Library: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState('all');
-  const [activeTab, setActiveTab] = useState<'Events' | 'Festivals' | 'Tourist Places'>('Festivals');
+  const [activeTab, setActiveTab] = useState<string>('Festivals');
   const [itinerary, setItinerary] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStory, setSelectedStory] = useState<any | null>(null);
+
+  const categories = [
+    { name: 'Festivals', icon: Sparkles },
+    { name: 'Events', icon: Calendar },
+    { name: 'Tourist Places', icon: Landmark },
+    { name: 'Food', icon: Utensils },
+    { name: 'Craft', icon: Palette },
+    { name: 'Heritage', icon: History },
+    { name: 'Hidden Gems', icon: MapIcon }
+  ];
 
   useEffect(() => {
     loadPosts();
@@ -22,7 +35,7 @@ const Library: React.FC = () => {
     setLoading(true);
     try {
       const data = await fetchAllContent();
-      setPosts(data);
+      setPosts(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -43,8 +56,8 @@ const Library: React.FC = () => {
   };
 
   const filteredPosts = posts.filter(post => 
-    (selectedDistrict === 'all' || post.district.toLowerCase() === selectedDistrict.toLowerCase()) &&
-    post.category.toLowerCase() === activeTab.toLowerCase()
+    (selectedDistrict === 'all' || (post.district || '').toLowerCase() === selectedDistrict.toLowerCase()) &&
+    (post.category || '').toLowerCase() === activeTab.toLowerCase()
   );
 
   return (
@@ -80,23 +93,24 @@ const Library: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-stone-100 p-1.5 rounded-2xl flex flex-wrap md:flex-nowrap gap-1 w-full lg:w-auto">
-            {(['Festivals', 'Events', 'Tourist Places'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs md:text-base ${
-                  activeTab === tab 
-                  ? 'bg-white text-amber-900 shadow-md scale-105' 
-                  : 'text-stone-500 hover:text-amber-800'
-                }`}
-              >
-                {tab === 'Festivals' && <Sparkles size={16} className="md:w-[18px] md:h-[18px]" />}
-                {tab === 'Events' && <Calendar size={16} className="md:w-[18px] md:h-[18px]" />}
-                {tab === 'Tourist Places' && <Landmark size={16} className="md:w-[18px] md:h-[18px]" />}
-                {tab}
-              </button>
-            ))}
+          <div className="bg-stone-100 p-1.5 rounded-2xl flex flex-wrap gap-1 w-full lg:w-auto overflow-x-auto no-scrollbar">
+            {categories.map(cat => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.name}
+                  onClick={() => setActiveTab(cat.name)}
+                  className={`flex-1 md:flex-none px-4 md:px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs md:text-sm whitespace-nowrap ${
+                    activeTab === cat.name 
+                    ? 'bg-white text-amber-900 shadow-md scale-105' 
+                    : 'text-stone-500 hover:text-amber-800'
+                  }`}
+                >
+                  <Icon size={16} />
+                  {cat.name}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -210,7 +224,7 @@ const Library: React.FC = () => {
                 </motion.h3>
 
                 <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-6 md:mb-8 text-stone-400">
-                  <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest">{selectedStory.district}</span>
+                  <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest capitalize">{selectedStory.district}</span>
                   <span className="text-stone-200">|</span>
                   <span className="text-[10px] md:text-sm font-bold capitalize">By {selectedStory.contributor}</span>
                 </div>
