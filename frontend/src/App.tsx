@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
-import { Map as MapIcon, Library as LibraryIcon, Heart, Search } from 'lucide-react';
+import { Map as MapIcon, Library as LibraryIcon, Heart, Search, Shield } from 'lucide-react';
 import Home from './pages/Home';
 import DistrictPage from './pages/DistrictPage';
 import Itinerary from './pages/Itinerary';
@@ -17,7 +17,6 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Simple 404 Component
 const NotFound = () => (
   <div className="min-h-screen flex flex-col items-center justify-center text-stone-900 pt-20">
     <Search size={64} className="text-amber-600 mb-6" />
@@ -38,9 +37,7 @@ const AnimatedRoutes = () => {
         <Route path="/itinerary" element={<Itinerary />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/library" element={<Library />} />
-        {/* Typo protection */}
         <Route path="/libraries" element={<Navigate to="/library" replace />} />
-        {/* Catch-all 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
@@ -132,7 +129,13 @@ const App: React.FC = () => {
               <a href="#" className="hover:text-white transition font-black text-[10px] uppercase tracking-[0.3em]">Twitter</a>
               <a href="#" className="hover:text-white transition font-black text-[10px] uppercase tracking-[0.3em]">Archive</a>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-20">© 2026 Exploring Cultural Assam</p>
+            
+            <div className="flex items-center justify-center gap-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-20">© 2026 Exploring Cultural Assam</p>
+              <Link to="/admin" className="opacity-5 hover:opacity-100 transition-opacity text-white">
+                <Shield size={12} />
+              </Link>
+            </div>
           </div>
         </footer>
       </div>
