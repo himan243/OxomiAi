@@ -1,0 +1,40 @@
+// Expanded GeoJSON for Assam districts (approximate coordinates for prototype)
+// In a real production app, this would be a full 1MB+ GeoJSON file loaded from a public URL.
+export const ASSAM_GEOJSON: any = {
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "NAME_1": "Kamrup" }, "geometry": { "type": "Polygon", "coordinates": [[[91.0, 25.8], [91.8, 25.8], [91.8, 26.5], [91.0, 26.5], [91.0, 25.8]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Jorhat" }, "geometry": { "type": "Polygon", "coordinates": [[[94.0, 26.5], [94.5, 26.5], [94.5, 27.0], [94.0, 27.0], [94.0, 26.5]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Dibrugarh" }, "geometry": { "type": "Polygon", "coordinates": [[[94.5, 27.2], [95.2, 27.2], [95.2, 27.7], [94.5, 27.7], [94.5, 27.2]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Sivasagar" }, "geometry": { "type": "Polygon", "coordinates": [[[94.4, 26.8], [95.0, 26.8], [95.0, 27.2], [94.4, 27.2], [94.4, 26.8]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Tinsukia" }, "geometry": { "type": "Polygon", "coordinates": [[[95.2, 27.3], [96.0, 27.3], [96.0, 28.0], [95.2, 28.0], [95.2, 27.3]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Majuli" }, "geometry": { "type": "Polygon", "coordinates": [[[94.1, 26.9], [94.4, 26.9], [94.4, 27.1], [94.1, 27.1], [94.1, 26.9]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Cachar" }, "geometry": { "type": "Polygon", "coordinates": [[[92.5, 24.5], [93.1, 24.5], [93.1, 25.1], [92.5, 25.1], [92.5, 24.5]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Dhubri" }, "geometry": { "type": "Polygon", "coordinates": [[[89.8, 25.8], [90.5, 25.8], [90.5, 26.3], [89.8, 26.3], [89.8, 25.8]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Nagaon" }, "geometry": { "type": "Polygon", "coordinates": [[[92.5, 26.1], [93.0, 26.1], [93.0, 26.6], [92.5, 26.6], [92.5, 26.1]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Sonitpur" }, "geometry": { "type": "Polygon", "coordinates": [[[92.4, 26.6], [93.2, 26.6], [93.2, 27.1], [92.4, 27.1], [92.4, 26.6]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Lakhimpur" }, "geometry": { "type": "Polygon", "coordinates": [[[93.8, 27.1], [94.5, 27.1], [94.5, 27.6], [93.8, 27.6], [93.8, 27.1]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Karbi Anglong" }, "geometry": { "type": "Polygon", "coordinates": [[[93.0, 25.5], [93.8, 25.5], [93.8, 26.2], [93.0, 26.2], [93.0, 25.5]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Dima Hasao" }, "geometry": { "type": "Polygon", "coordinates": [[[92.6, 25.0], [93.3, 25.0], [93.3, 25.6], [92.6, 25.6], [92.6, 25.0]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Kokrajhar" }, "geometry": { "type": "Polygon", "coordinates": [[[90.0, 26.3], [90.6, 26.3], [90.6, 26.8], [90.0, 26.8], [90.0, 26.3]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Barpeta" }, "geometry": { "type": "Polygon", "coordinates": [[[90.8, 26.1], [91.3, 26.1], [91.3, 26.6], [90.8, 26.6], [90.8, 26.1]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Bongaigaon" }, "geometry": { "type": "Polygon", "coordinates": [[[90.5, 26.2], [90.9, 26.2], [90.9, 26.6], [90.5, 26.6], [90.5, 26.2]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Goalpara" }, "geometry": { "type": "Polygon", "coordinates": [[[90.3, 25.9], [91.0, 25.9], [91.0, 26.3], [90.3, 26.3], [90.3, 25.9]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Baksa" }, "geometry": { "type": "Polygon", "coordinates": [[[91.0, 26.6], [91.7, 26.6], [91.7, 27.0], [91.0, 27.0], [91.0, 26.6]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Nalbari" }, "geometry": { "type": "Polygon", "coordinates": [[[91.3, 26.3], [91.7, 26.3], [91.7, 26.7], [91.3, 26.7], [91.3, 26.3]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Darrang" }, "geometry": { "type": "Polygon", "coordinates": [[[91.8, 26.4], [92.3, 26.4], [92.3, 26.9], [91.8, 26.9], [91.8, 26.4]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Udalguri" }, "geometry": { "type": "Polygon", "coordinates": [[[91.9, 26.7], [92.5, 26.7], [92.5, 27.2], [91.9, 27.2], [91.9, 26.7]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Morigaon" }, "geometry": { "type": "Polygon", "coordinates": [[[92.1, 26.1], [92.6, 26.1], [92.6, 26.5], [92.1, 26.5], [92.1, 26.1]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Karimganj" }, "geometry": { "type": "Polygon", "coordinates": [[[92.2, 24.3], [92.6, 24.3], [92.6, 24.9], [92.2, 24.9], [92.2, 24.3]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Hailakandi" }, "geometry": { "type": "Polygon", "coordinates": [[[92.4, 24.2], [92.8, 24.2], [92.8, 24.8], [92.4, 24.8], [92.4, 24.2]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Golaghat" }, "geometry": { "type": "Polygon", "coordinates": [[[93.7, 26.2], [94.2, 26.2], [94.2, 26.8], [93.7, 26.8], [93.7, 26.2]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Dhemaji" }, "geometry": { "type": "Polygon", "coordinates": [[[94.5, 27.4], [95.4, 27.4], [95.4, 27.9], [94.5, 27.9], [94.5, 27.4]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Biswanath" }, "geometry": { "type": "Polygon", "coordinates": [[[93.1, 26.7], [93.7, 26.7], [93.7, 27.2], [93.1, 27.2], [93.1, 26.7]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Charaideo" }, "geometry": { "type": "Polygon", "coordinates": [[[94.8, 26.8], [95.3, 26.8], [95.3, 27.1], [94.8, 27.1], [94.8, 26.8]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Hojai" }, "geometry": { "type": "Polygon", "coordinates": [[[92.7, 25.7], [93.2, 25.7], [93.2, 26.2], [92.7, 26.2], [92.7, 25.7]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Chirang" }, "geometry": { "type": "Polygon", "coordinates": [[[90.4, 26.5], [91.0, 26.5], [91.0, 26.9], [90.4, 26.9], [90.4, 26.5]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "South Salmara" }, "geometry": { "type": "Polygon", "coordinates": [[[89.8, 25.6], [90.2, 25.6], [90.2, 25.9], [89.8, 25.9], [89.8, 25.6]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "West Karbi Anglong" }, "geometry": { "type": "Polygon", "coordinates": [[[92.2, 25.6], [92.8, 25.6], [92.8, 26.1], [92.2, 26.1], [92.2, 25.6]]] } },
+    { "type": "Feature", "properties": { "NAME_1": "Kamrup Metro" }, "geometry": { "type": "Polygon", "coordinates": [[[91.6, 26.1], [92.0, 26.1], [92.0, 26.4], [91.6, 26.4], [91.6, 26.1]]] } }
+  ]
+};
