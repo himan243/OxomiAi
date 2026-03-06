@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, ChevronLeft, MapPin, Camera, Heart, CheckCircle2, FileVideo, ImageIcon, X, ArrowRight, Share2, Calendar } from 'lucide-react';
+import { Upload, ChevronLeft, MapPin, Camera, Heart, CheckCircle2, FileVideo, ImageIcon, X, ArrowRight, Share2 } from 'lucide-react';
 import { fetchDistrictContent, submitContent } from '../services/api';
 
 const DistrictPage: React.FC = () => {
@@ -172,8 +172,9 @@ const DistrictPage: React.FC = () => {
                         itinerary.includes(item.id) ? 'bg-amber-600 text-white shadow-lg scale-110' : 'bg-white/20 text-white hover:bg-white hover:text-amber-600'
                       }`}
                     >
-                      <Heart size={18} md:size={20} fill={itinerary.includes(item.id) ? "currentColor" : "none"} />
+                      <Heart className="w-4.5 h-4.5 md:w-5 md:h-5" fill={itinerary.includes(item.id) ? "currentColor" : "none"} />
                     </button>
+
                   </motion.div>
                   <div className="p-8 md:p-10">
                     <span className="text-[8px] md:text-[10px] font-black text-amber-600 uppercase tracking-[0.2em]">{item.category}</span>
@@ -189,7 +190,7 @@ const DistrictPage: React.FC = () => {
             ) : (
               <div className="col-span-full py-20 md:py-32 text-center">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-6">
-                  <Upload size={28} md:size={32} className="text-stone-200" />
+                  <Upload className="w-7 h-7 md:w-8 md:h-8 text-stone-200" />
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black text-stone-900 mb-2 tracking-tight">The story is yet to be told</h3>
                 <p className="text-stone-400 font-medium mb-8 md:mb-10 max-w-xs mx-auto text-sm md:text-base">Be the first to document the cultural heritage of {id}.</p>
@@ -216,7 +217,7 @@ const DistrictPage: React.FC = () => {
                 ) : (
                   <img src={selectedStory.media_url} alt={selectedStory.title} className="w-full h-full object-cover" />
                 )}
-                <button onClick={() => setSelectedStory(null)} className="absolute top-4 left-4 md:top-8 md:left-8 p-3 md:p-4 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-all"><X size={20} md:size={24} /></button>
+                <button onClick={() => setSelectedStory(null)} className="absolute top-4 left-4 md:top-8 md:left-8 p-3 md:p-4 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-all"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
               </motion.div>
 
               <div className="w-full md:w-2/5 p-6 md:p-16 overflow-y-auto bg-[#fdfcf7] flex flex-col">
@@ -266,10 +267,10 @@ const DistrictPage: React.FC = () => {
                       itinerary.includes(selectedStory.id) ? 'bg-amber-600 text-white shadow-xl scale-105' : 'bg-white text-stone-400 hover:text-amber-800 shadow-sm border border-stone-100'
                     }`}
                   >
-                    <Heart size={16} md:size={18} fill={itinerary.includes(selectedStory.id) ? "currentColor" : "none"} />
+                    <Heart className="w-4 h-4 md:w-4.5 md:h-4.5" fill={itinerary.includes(selectedStory.id) ? "currentColor" : "none"} />
                     {itinerary.includes(selectedStory.id) ? 'Saved' : 'Save'}
                   </button>
-                  <button className="p-3 md:p-4 bg-white text-stone-400 hover:text-stone-900 transition shadow-sm border border-stone-100 rounded-xl md:rounded-2xl"><Share2 size={18} md:size={20} /></button>
+                  <button className="p-3 md:p-4 bg-white text-stone-400 hover:text-stone-900 transition shadow-sm border border-stone-100 rounded-xl md:rounded-2xl"><Share2 className="w-4.5 h-4.5 md:w-5 md:h-5" /></button>
                 </div>
               </div>
             </motion.div>
@@ -288,7 +289,7 @@ const DistrictPage: React.FC = () => {
               {submitted ? (
                 <div className="py-12 md:py-16 text-center">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1, rotate: [0, 10, -10, 0] }} className="w-20 h-20 md:w-24 md:h-24 bg-green-50 text-green-600 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-inner">
-                    <CheckCircle2 size={40} md:size={48} />
+                    <CheckCircle2 className="w-10 h-10 md:w-12 md:h-12" />
                   </motion.div>
                   <h3 className="text-3xl md:text-4xl font-black text-stone-900 mb-4 tracking-tighter">Story Shared!</h3>
                   <p className="text-stone-500 font-medium text-base md:text-lg px-4">Your discovery is now being reviewed by the elders in the moderation vault.</p>
@@ -318,7 +319,7 @@ const DistrictPage: React.FC = () => {
                         ) : (
                           <>
                             <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-2xl md:rounded-3xl shadow-sm flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                              <Upload size={24} md:size={28} className="text-amber-600" />
+                              <Upload className="w-6 h-6 md:w-7 md:h-7 text-amber-600" />
                             </div>
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Drop Media (Photo/Video)</p>
                           </>
