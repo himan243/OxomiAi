@@ -32,7 +32,7 @@ const Home: React.FC = () => {
             Oxomi<span className="text-orange-600">Ai</span>
           </h1>
           <p className="max-w-2xl text-lg md:text-2xl text-stone-600 font-medium leading-relaxed mx-auto px-4 drop-shadow-sm">
-            An interactive odyssey through the 35 districts of Assam. 
+            Let's explore the Awesome Assam. An interactive odyssey through the 35 districts. 
             Uncover the stories and hidden gems of the land of the Red River.
           </p>
           
