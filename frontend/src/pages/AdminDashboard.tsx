@@ -39,6 +39,7 @@ const AdminDashboard: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const adminKey = import.meta.env.VITE_ADMIN_KEY;
+    console.log("Checking key...", { provided: password, expectedLength: adminKey?.length }); // Debug log
     if (password === adminKey) {
       setIsAuthenticated(true);
       setError('');
@@ -75,11 +76,16 @@ const AdminDashboard: React.FC = () => {
   };
 
   const filteredStories = stories.filter(story => {
-    const matchDistrict = filterDistrict === 'all' || story.district.toLowerCase() === filterDistrict.toLowerCase();
-    const matchCategory = filterCategory === 'all' || story.category.toLowerCase() === filterCategory.toLowerCase();
+    const storyDistrict = story.district || '';
+    const storyCategory = story.category || '';
+    const storyTitle = story.title || '';
+    const storyDesc = story.description || '';
+
+    const matchDistrict = filterDistrict === 'all' || storyDistrict.toLowerCase() === filterDistrict.toLowerCase();
+    const matchCategory = filterCategory === 'all' || storyCategory.toLowerCase() === filterCategory.toLowerCase();
     const matchStatus = filterStatus === 'all' || story.status === filterStatus;
-    const matchSearch = story.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        story.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSearch = storyTitle.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        storyDesc.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchDistrict && matchCategory && matchStatus && matchSearch;
   });

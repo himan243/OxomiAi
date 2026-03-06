@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
-import { Map as MapIcon, Library as LibraryIcon, Heart } from 'lucide-react';
+import { Map as MapIcon, Library as LibraryIcon, Heart, Search } from 'lucide-react';
 import Home from './pages/Home';
 import DistrictPage from './pages/DistrictPage';
 import Itinerary from './pages/Itinerary';
@@ -17,6 +17,16 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Simple 404 Component
+const NotFound = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center text-stone-900 pt-20">
+    <Search size={64} className="text-amber-600 mb-6" />
+    <h1 className="text-4xl font-black mb-2">Lost in the Map?</h1>
+    <p className="text-stone-500 mb-8 font-medium">We couldn't find the page you're looking for.</p>
+    <Link to="/" className="bg-amber-800 text-white px-8 py-4 rounded-full font-black uppercase tracking-widest text-xs shadow-xl">Back to Exploration</Link>
+  </div>
+);
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   
@@ -28,6 +38,10 @@ const AnimatedRoutes = () => {
         <Route path="/itinerary" element={<Itinerary />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/library" element={<Library />} />
+        {/* Typo protection */}
+        <Route path="/libraries" element={<Navigate to="/library" replace />} />
+        {/* Catch-all 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
   );
@@ -37,7 +51,6 @@ const NavBar = () => {
   const { scrollY } = useScroll();
   const location = useLocation();
   
-  // Desktop Nav dissolves
   const desktopOpacity = useTransform(scrollY, [0, 200], [1, 0]);
   const desktopPointerEvents = useTransform(scrollY, (y) => y > 200 ? 'none' : 'auto');
 
@@ -49,7 +62,6 @@ const NavBar = () => {
 
   return (
     <>
-      {/* Desktop Navigation */}
       <motion.nav 
         style={{ opacity: desktopOpacity, pointerEvents: desktopPointerEvents as any }}
         className="fixed top-0 left-0 w-full z-[1000] px-6 py-8 hidden md:flex justify-between items-center mix-blend-difference"
@@ -68,7 +80,6 @@ const NavBar = () => {
         </div>
       </motion.nav>
 
-      {/* Mobile Navigation (Bottom Dock) */}
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[2000] md:hidden w-[90%] max-w-sm">
         <div className="bg-stone-900/90 backdrop-blur-2xl rounded-3xl p-2 shadow-2xl border border-white/10 flex justify-between items-center px-4">
           {navLinks.map(link => {
@@ -88,7 +99,6 @@ const NavBar = () => {
         </div>
       </nav>
 
-      {/* Mobile Logo Only */}
       <div className="fixed top-6 left-6 z-[1000] md:hidden mix-blend-difference">
         <Link to="/" className="text-2xl font-black text-white tracking-tighter">OxomiAi</Link>
       </div>
@@ -101,12 +111,10 @@ const App: React.FC = () => {
     <Router>
       <ScrollToTop />
       <div className="min-h-screen font-sans text-stone-900 relative">
-        {/* Global Background Image Layer */}
         <div 
           className="fixed inset-0 z-[-1] bg-cover bg-center bg-fixed opacity-10"
           style={{ backgroundImage: "url('/bgr/tea_garden.jpg')" }}
         ></div>
-        {/* Subtle Overlay Gradient */}
         <div className="fixed inset-0 z-[-1] bg-gradient-to-br from-[#fdfcf7] via-transparent to-amber-50/30"></div>
 
         <NavBar />
