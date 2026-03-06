@@ -39,7 +39,7 @@ export const submitContent = async (formData: FormData) => {
   if (file) {
     // 1. Upload file to Supabase Storage (bucket named 'media')
     const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('media')
       .upload(fileName, file);
 

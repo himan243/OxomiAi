@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ASSAM_DISTRICTS } from '../utils/districts';
 import { 
   Search, Calendar, Landmark, Sparkles, Filter, Heart, X, ArrowRight, Share2, 
-  Utensils, Palette, History, Map as MapIcon, ImageIcon, ChevronRight, Edit3, CheckCircle2
+  Utensils, Palette, History, Map as MapIcon, ImageIcon, ChevronRight, Edit3, CheckCircle2, ChevronLeft
 } from 'lucide-react';
 import { fetchAllContent, suggestEdit } from '../services/api';
 
