@@ -52,25 +52,25 @@ const Library: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen pt-40 pb-20 px-6 bg-[#fdfcf7]"
+      className="min-h-screen pt-24 md:pt-40 pb-20 px-4 md:px-6 bg-[#fdfcf7]"
     >
       <div className="container mx-auto">
-        <header className="mb-16">
-          <h1 className="text-6xl font-black text-amber-900 mb-4 tracking-tighter">The Library</h1>
-          <p className="text-xl text-stone-500 font-medium max-w-2xl">
+        <header className="mb-10 md:mb-16">
+          <h1 className="text-4xl md:text-6xl font-black text-amber-900 mb-4 tracking-tighter">The Library</h1>
+          <p className="text-base md:text-xl text-stone-500 font-medium max-w-2xl leading-relaxed">
             A curated collection of Assam's living heritage. Select a district and dive into its stories.
           </p>
         </header>
 
         {/* Filters */}
-        <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-12">
-          <div className="flex flex-wrap gap-4">
-            <div className="relative">
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-8 items-start lg:items-center justify-between mb-10 md:mb-12">
+          <div className="flex flex-wrap gap-4 w-full lg:w-auto">
+            <div className="relative w-full md:w-auto">
               <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-700" size={18} />
               <select 
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="pl-12 pr-6 py-4 bg-white rounded-2xl border-none shadow-sm font-bold text-amber-900 focus:ring-4 focus:ring-amber-100 appearance-none min-w-[240px]"
+                className="w-full pl-12 pr-6 py-4 bg-white rounded-2xl border-none shadow-sm font-bold text-amber-900 focus:ring-4 focus:ring-amber-100 appearance-none md:min-w-[240px]"
               >
                 <option value="all">All Districts</option>
                 {ASSAM_DISTRICTS.map(d => (
@@ -80,20 +80,20 @@ const Library: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-stone-100 p-1.5 rounded-2xl flex gap-1">
+          <div className="bg-stone-100 p-1.5 rounded-2xl flex flex-wrap md:flex-nowrap gap-1 w-full lg:w-auto">
             {(['Festivals', 'Events', 'Tourist Places'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
+                className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs md:text-base ${
                   activeTab === tab 
                   ? 'bg-white text-amber-900 shadow-md scale-105' 
                   : 'text-stone-500 hover:text-amber-800'
                 }`}
               >
-                {tab === 'Festivals' && <Sparkles size={18} />}
-                {tab === 'Events' && <Calendar size={18} />}
-                {tab === 'Tourist Places' && <Landmark size={18} />}
+                {tab === 'Festivals' && <Sparkles size={16} className="md:w-[18px] md:h-[18px]" />}
+                {tab === 'Events' && <Calendar size={16} className="md:w-[18px] md:h-[18px]" />}
+                {tab === 'Tourist Places' && <Landmark size={16} className="md:w-[18px] md:h-[18px]" />}
                 {tab}
               </button>
             ))}
@@ -101,7 +101,7 @@ const Library: React.FC = () => {
         </div>
 
         {/* Content Grid */}
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
           <AnimatePresence mode="popLayout">
             {loading ? (
                <div className="col-span-full py-20 text-center font-bold text-stone-400">Loading stories...</div>
@@ -116,7 +116,7 @@ const Library: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-stone-100 group hover:shadow-2xl transition-all duration-500 cursor-pointer"
                 >
-                  <motion.div layoutId={`lib-image-${post.id}`} className="relative h-72 overflow-hidden">
+                  <motion.div layoutId={`lib-image-${post.id}`} className="relative h-64 md:h-72 overflow-hidden">
                     <img 
                       src={post.media_url} 
                       alt={post.title} 
@@ -134,17 +134,17 @@ const Library: React.FC = () => {
                     </button>
 
                     <div className="absolute bottom-6 left-6 flex items-center gap-2">
-                      <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-bold uppercase tracking-widest border border-white/30 capitalize">
+                      <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-black uppercase tracking-widest border border-white/30 capitalize">
                         {post.district}
                       </div>
                     </div>
                   </motion.div>
-                  <div className="p-8">
-                    <motion.h3 layoutId={`lib-title-${post.id}`} className="text-2xl font-black text-stone-900 mb-3 leading-tight">{post.title}</motion.h3>
-                    <p className="text-stone-500 font-medium leading-relaxed mb-6 line-clamp-2">
+                  <div className="p-6 md:p-8">
+                    <motion.h3 layoutId={`lib-title-${post.id}`} className="text-xl md:text-2xl font-black text-stone-900 mb-3 leading-tight">{post.title}</motion.h3>
+                    <p className="text-stone-500 text-sm font-medium leading-relaxed mb-6 line-clamp-2">
                       {post.description}
                     </p>
-                    <div className="flex items-center gap-2 text-amber-800 font-black text-sm uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-amber-800 font-black text-xs uppercase tracking-widest">
                       <span>Read Story</span>
                       <ArrowRight size={14} />
                     </div>
@@ -153,14 +153,14 @@ const Library: React.FC = () => {
               ))
             ) : (
               <motion.div 
-                className="col-span-full py-40 text-center"
+                className="col-span-full py-20 md:py-40 text-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <div className="bg-stone-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-300">
-                  <Search size={40} />
+                <div className="bg-stone-50 w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-300">
+                  <Search size={32} className="md:w-10 md:h-10" />
                 </div>
-                <h3 className="text-3xl font-black text-stone-900 mb-2">No entries found</h3>
+                <h3 className="text-2xl md:text-3xl font-black text-stone-900 mb-2">No entries found</h3>
                 <p className="text-stone-500 font-medium">Try another district or category to discover something new.</p>
               </motion.div>
             )}
@@ -171,7 +171,7 @@ const Library: React.FC = () => {
       {/* Expanded Story View */}
       <AnimatePresence>
         {selectedStory && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 md:p-10">
+          <div className="fixed inset-0 z-[3000] flex items-center justify-center p-2 md:p-10">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -182,22 +182,22 @@ const Library: React.FC = () => {
             
             <motion.div 
               layoutId={`lib-card-${selectedStory.id}`}
-              className="relative bg-white w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row"
+              className="relative bg-white w-full max-w-5xl max-h-[90vh] md:max-h-[85vh] rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row"
             >
-              <motion.div layoutId={`lib-image-${selectedStory.id}`} className="w-full md:w-3/5 h-[40vh] md:h-auto bg-stone-900 relative">
+              <motion.div layoutId={`lib-image-${selectedStory.id}`} className="w-full md:w-3/5 h-64 md:h-auto bg-stone-900 relative flex-shrink-0">
                 {selectedStory.type === 'video' ? (
                   <video src={selectedStory.media_url} controls autoPlay className="w-full h-full object-contain" />
                 ) : (
                   <img src={selectedStory.media_url} alt={selectedStory.title} className="w-full h-full object-cover" />
                 )}
-                <button onClick={() => setSelectedStory(null)} className="absolute top-6 left-6 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition md:hidden">
+                <button onClick={() => setSelectedStory(null)} className="absolute top-4 left-4 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition md:hidden">
                   <X size={20} />
                 </button>
               </motion.div>
 
-              <div className="w-full md:w-2/5 p-8 md:p-12 overflow-y-auto bg-[#fdfcf7]">
-                <div className="flex justify-between items-start mb-8">
-                  <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+              <div className="w-full md:w-2/5 p-6 md:p-12 overflow-y-auto bg-[#fdfcf7]">
+                <div className="flex justify-between items-start mb-6 md:mb-8">
+                  <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                     {selectedStory.category}
                   </div>
                   <button onClick={() => setSelectedStory(null)} className="hidden md:block text-stone-300 hover:text-stone-900 transition">
@@ -205,28 +205,28 @@ const Library: React.FC = () => {
                   </button>
                 </div>
 
-                <motion.h3 layoutId={`lib-title-${selectedStory.id}`} className="text-4xl md:text-5xl font-black text-stone-900 mb-6 tracking-tighter leading-none">
+                <motion.h3 layoutId={`lib-title-${selectedStory.id}`} className="text-3xl md:text-5xl font-black text-stone-900 mb-4 md:mb-6 tracking-tighter leading-tight md:leading-none">
                   {selectedStory.title}
                 </motion.h3>
 
-                <div className="flex items-center gap-4 mb-8 text-stone-400">
-                  <span className="text-sm font-bold uppercase tracking-widest">{selectedStory.district}</span>
+                <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-6 md:mb-8 text-stone-400">
+                  <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest">{selectedStory.district}</span>
                   <span className="text-stone-200">|</span>
-                  <span className="text-sm font-bold capitalize">By {selectedStory.contributor}</span>
+                  <span className="text-[10px] md:text-sm font-bold capitalize">By {selectedStory.contributor}</span>
                 </div>
 
-                <p className="text-stone-600 text-lg font-medium leading-relaxed whitespace-pre-wrap">
+                <p className="text-stone-600 text-base md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
                   {selectedStory.description}
                 </p>
 
-                <div className="mt-12 pt-8 border-t border-stone-100 flex items-center justify-between">
+                <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-stone-100 flex items-center justify-between">
                   <button 
                     onClick={(e) => handleToggleItinerary(e, selectedStory.id)}
-                    className={`flex items-center gap-2 font-black text-sm uppercase tracking-widest transition ${
+                    className={`flex items-center gap-2 font-black text-[10px] md:text-sm uppercase tracking-widest transition ${
                       itinerary.includes(selectedStory.id) ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'
                     }`}
                   >
-                    <Heart size={20} fill={itinerary.includes(selectedStory.id) ? "currentColor" : "none"} />
+                    <Heart size={18} className="md:w-[20px] md:h-[20px]" fill={itinerary.includes(selectedStory.id) ? "currentColor" : "none"} />
                     {itinerary.includes(selectedStory.id) ? 'Saved' : 'Save'}
                   </button>
                   <button className="p-3 text-stone-400 hover:text-stone-900 transition">
