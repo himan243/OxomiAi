@@ -10,8 +10,11 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState('');
   
   const [stories, setStories] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedStory, setSelectedStory] = useState<any | null>(null);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState<'content' | 'suggestions'>('content');
   
   // Filter States
   const [filterDistrict, setFilterDistrict] = useState('all');
@@ -21,19 +24,104 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadStories();
+      loadData();
     }
   }, [isAuthenticated]);
 
-  const loadStories = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const data = await adminFetchAllContent();
-      setStories(data || []);
+      console.log("AdminDashboard: Fetching stories...");
+      const storyData = await adminFetchAllContent();
+      console.log("AdminDashboard: Stories fetched:", storyData?.length);
+      const currentStories = storyData || [];
+      setStories(currentStories);
+
+      console.log("AdminDashboard: Fetching suggestions...");
+      try {
+        const { data: suggestionData, error: suggestionError } = await supabase
+          .from('content_suggestions')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        console.log("AdminDashboard: Raw suggestionData from Supabase:", suggestionData);
+        
+        if (suggestionError) {
+          console.warn("Suggestions fetch error:", suggestionError);
+        } else {
+          // Manually join with stories in frontend for reliability
+          const joinedSuggestions = (suggestionData || []).map((sugg: any) => {
+            const story = currentStories.find(s => s.id.toString() === sugg.content_id?.toString());
+            if (!story) console.warn("AdminDashboard: Could not find story for suggestion:", sugg.content_id);
+            return {
+              ...sugg,
+              cultural_content: story
+            };
+          });
+          console.log("AdminDashboard: Suggestions joined count:", joinedSuggestions.length);
+          setSuggestions(joinedSuggestions);
+        }
+      } catch (innerErr) {
+        console.warn("Suggestions fetch failed silently:", innerErr);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("AdminDashboard: Critical fetch error:", err);
+      alert('Failed to load dashboard data. Check console for details.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApproveSuggestion = async (suggestion: any) => {
+    if (!window.confirm('Apply these changes to the original story?')) return;
+    try {
+      // 1. Update the original story
+      const { error: updateError } = await supabase
+        .from('cultural_content')
+        .update({
+          title: suggestion.suggested_title,
+          description: suggestion.suggested_description
+        })
+        .eq('id', suggestion.content_id);
+      
+      if (updateError) throw updateError;
+
+      // 2. Mark suggestion as approved (or just delete it)
+      const { error: deleteError } = await supabase
+        .from('content_suggestions')
+        .delete()
+        .eq('id', suggestion.id);
+      
+      if (deleteError) throw deleteError;
+
+      // 3. Update local state
+      setStories(stories.map(s => s.id === suggestion.content_id ? { 
+        ...s, 
+        title: suggestion.suggested_title, 
+        description: suggestion.suggested_description 
+      } : s));
+      setSuggestions(suggestions.filter(s => s.id !== suggestion.id));
+      setSelectedSuggestion(null);
+      alert('Changes applied successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to apply suggestion');
+    }
+  };
+
+  const handleRejectSuggestion = async (id: string) => {
+    if (!window.confirm('Reject and delete this suggestion?')) return;
+    try {
+      const { error } = await supabase
+        .from('content_suggestions')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      setSuggestions(suggestions.filter(s => s.id !== id));
+      setSelectedSuggestion(null);
+    } catch (err) {
+      alert('Failed to reject suggestion');
     }
   };
 
@@ -123,6 +211,15 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  if (loading && stories.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#fdfcf7] flex flex-col items-center justify-center">
+        <RefreshCcw size={48} className="text-amber-600 animate-spin mb-4" />
+        <p className="font-black text-stone-400 uppercase tracking-widest text-xs">Accessing Records...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fdfcf7] pt-24 md:pt-32 pb-20 px-4 md:px-6 lg:px-12">
       <div className="max-w-7xl mx-auto">
@@ -136,7 +233,7 @@ const AdminDashboard: React.FC = () => {
             <h1 className="text-4xl md:text-6xl font-black text-stone-900 tracking-tighter leading-none">The Moderation <span className="text-amber-600">Vault</span></h1>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
-            <button onClick={loadStories} className="flex-1 md:flex-none p-4 bg-white rounded-2xl shadow-sm border border-stone-100 text-stone-400 hover:text-amber-600 transition flex items-center justify-center">
+            <button onClick={loadData} className="flex-1 md:flex-none p-4 bg-white rounded-2xl shadow-sm border border-stone-100 text-stone-400 hover:text-amber-600 transition flex items-center justify-center">
               <RefreshCcw size={20} className={loading ? 'animate-spin' : ''} />
             </button>
             <button onClick={() => setIsAuthenticated(false)} className="flex-[3] md:flex-none px-8 py-4 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-stone-800 transition">Lock Vault</button>
@@ -190,77 +287,148 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-4 mb-8">
+          <button 
+            onClick={() => setActiveTab('content')}
+            className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${
+              activeTab === 'content' ? 'bg-amber-800 text-white shadow-lg scale-105' : 'bg-white text-stone-400 hover:text-amber-800'
+            }`}
+          >
+            Stories & Media
+          </button>
+          <button 
+            onClick={() => setActiveTab('suggestions')}
+            className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all relative ${
+              activeTab === 'suggestions' ? 'bg-amber-800 text-white shadow-lg scale-105' : 'bg-white text-stone-400 hover:text-amber-800'
+            }`}
+          >
+            Edit Suggestions
+            {suggestions.length > 0 && (
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] border-2 border-[#fdfcf7]">
+                {suggestions.length}
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* Data Table / List */}
-        <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-sm border border-stone-100 overflow-hidden">
+        <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-sm border border-stone-100 overflow-hidden mb-20">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-stone-50">
               <thead className="bg-stone-50/50">
                 <tr>
-                  <th className="px-6 md:px-10 py-6 text-left text-[10px] font-black text-stone-400 uppercase tracking-widest">Story</th>
-                  <th className="hidden md:table-cell px-10 py-6 text-left text-[10px] font-black text-stone-400 uppercase tracking-widest">Location</th>
+                  <th className="px-6 md:px-10 py-6 text-left text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                    {activeTab === 'content' ? 'Story' : 'Suggested Improvement'}
+                  </th>
+                  <th className="hidden md:table-cell px-10 py-6 text-left text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                    {activeTab === 'content' ? 'Location' : 'Original Story'}
+                  </th>
                   <th className="px-6 md:px-10 py-6 text-left text-[10px] font-black text-stone-400 uppercase tracking-widest">Status</th>
                   <th className="px-6 md:px-10 py-6 text-right text-[10px] font-black text-stone-400 uppercase tracking-widest">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-50">
-                <AnimatePresence>
-                  {filteredStories.length > 0 ? filteredStories.map((story) => (
-                    <motion.tr 
-                      key={story.id}
-                      layoutId={`admin-row-${story.id}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setSelectedStory(story)}
-                      className="hover:bg-stone-50/50 transition-colors group cursor-pointer"
-                    >
-                      <td className="px-6 md:px-10 py-6 md:py-8">
-                        <div className="flex items-center gap-4 md:gap-6">
-                          <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden bg-stone-100 shadow-sm flex-shrink-0">
-                            {story.type === 'video' ? (
-                              <div className="w-full h-full flex items-center justify-center bg-stone-200">
-                                <Eye size={20} className="text-stone-400" />
+                <AnimatePresence mode="wait">
+                  {activeTab === 'content' ? (
+                    filteredStories.length > 0 ? filteredStories.map((story) => (
+                      <motion.tr 
+                        key={story.id}
+                        layoutId={`admin-row-${story.id}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedStory(story)}
+                        className="hover:bg-stone-50/50 transition-colors group cursor-pointer"
+                      >
+                        <td className="px-6 md:px-10 py-6 md:py-8">
+                          <div className="flex items-center gap-4 md:gap-6">
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden bg-stone-100 shadow-sm flex-shrink-0">
+                              {story.type === 'video' ? (
+                                <div className="w-full h-full flex items-center justify-center bg-stone-200">
+                                  <Eye size={20} className="text-stone-400" />
+                                </div>
+                              ) : (
+                                <img src={story.media_url} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-black text-stone-900 md:text-lg tracking-tight mb-1">{story.title}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-stone-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest">{story.category}</p>
+                                <span className="md:hidden text-stone-200">|</span>
+                                <span className="md:hidden text-stone-400 text-[8px] font-black uppercase tracking-widest capitalize">{story.district}</span>
                               </div>
-                            ) : (
-                              <img src={story.media_url} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-black text-stone-900 md:text-lg tracking-tight mb-1">{story.title}</p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-stone-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest">{story.category}</p>
-                              <span className="md:hidden text-stone-200">|</span>
-                              <span className="md:hidden text-stone-400 text-[8px] font-black uppercase tracking-widest capitalize">{story.district}</span>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="hidden md:table-cell px-10 py-8">
-                        <div className="flex items-center gap-2 text-stone-600 font-bold capitalize text-sm">
-                          <MapPin size={14} className="text-amber-600" />
-                          {story.district}
-                        </div>
-                      </td>
-                      <td className="px-6 md:px-10 py-8">
-                        <div className={`inline-flex px-3 md:px-4 py-1.5 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest ${
-                          story.status === 'approved' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
-                        }`}>
-                          {story.status}
-                        </div>
-                      </td>
-                      <td className="px-6 md:px-10 py-8 text-right">
-                        <ArrowRight size={20} className="inline text-stone-200 group-hover:text-amber-600 group-hover:translate-x-2 transition-all" />
-                      </td>
-                    </motion.tr>
-                  )) : (
-                    <tr>
-                      <td colSpan={4} className="px-10 py-32 text-center">
-                        <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-200">
-                          <Filter size={32} />
-                        </div>
-                        <p className="text-stone-400 font-black uppercase tracking-widest text-xs">No stories found matching filters</p>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="hidden md:table-cell px-10 py-8">
+                          <div className="flex items-center gap-2 text-stone-600 font-bold capitalize text-sm">
+                            <MapPin size={14} className="text-amber-600" />
+                            {story.district}
+                          </div>
+                        </td>
+                        <td className="px-6 md:px-10 py-8">
+                          <div className={`inline-flex px-3 md:px-4 py-1.5 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest ${
+                            story.status === 'approved' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {story.status}
+                          </div>
+                        </td>
+                        <td className="px-6 md:px-10 py-8 text-right">
+                          <ArrowRight size={20} className="inline text-stone-200 group-hover:text-amber-600 group-hover:translate-x-2 transition-all" />
+                        </td>
+                      </motion.tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={4} className="px-10 py-32 text-center">
+                          <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-200">
+                            <Filter size={32} />
+                          </div>
+                          <p className="text-stone-400 font-black uppercase tracking-widest text-xs">No stories found</p>
+                        </td>
+                      </tr>
+                    )
+                  ) : (
+                    suggestions.length > 0 ? suggestions.map((sugg) => (
+                      <motion.tr 
+                        key={sugg.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedSuggestion(sugg)}
+                        className="hover:bg-stone-50/50 transition-colors group cursor-pointer"
+                      >
+                        <td className="px-6 md:px-10 py-6 md:py-8">
+                          <div>
+                            <p className="font-black text-stone-900 md:text-lg tracking-tight mb-1">{sugg.suggested_title}</p>
+                            <p className="text-stone-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest">New Proposal</p>
+                          </div>
+                        </td>
+                        <td className="hidden md:table-cell px-10 py-8">
+                          <div className="text-stone-600 font-bold text-sm">
+                            {sugg.cultural_content?.title || 'Unknown Story'}
+                          </div>
+                        </td>
+                        <td className="px-6 md:px-10 py-8">
+                          <div className="inline-flex px-3 md:px-4 py-1.5 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600">
+                            {sugg.status}
+                          </div>
+                        </td>
+                        <td className="px-6 md:px-10 py-8 text-right">
+                          <ArrowRight size={20} className="inline text-stone-200 group-hover:text-amber-600 group-hover:translate-x-2 transition-all" />
+                        </td>
+                      </motion.tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={4} className="px-10 py-32 text-center">
+                          <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-200">
+                            <RefreshCcw size={32} />
+                          </div>
+                          <p className="text-stone-400 font-black uppercase tracking-widest text-xs">No pending suggestions</p>
+                        </td>
+                      </tr>
+                    )
                   )}
                 </AnimatePresence>
               </tbody>
@@ -269,12 +437,11 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Expanded Review Modal */}
+      {/* Expanded Review Modal (Story) */}
       <AnimatePresence>
         {selectedStory && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center p-2 md:p-10">
+          <div className="fixed inset-0 z-[5000] flex items-center justify-center p-2 md:p-10 overflow-hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedStory(null)} className="absolute inset-0 bg-stone-950/90 backdrop-blur-xl"></motion.div>
-            
             <motion.div 
               layoutId={`admin-row-${selectedStory.id}`}
               className="relative bg-white w-full max-w-6xl h-full md:h-[85vh] rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row z-10"
@@ -334,7 +501,6 @@ const AdminDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Admin Actions in Modal */}
                 <div className="mt-12 pt-10 border-t border-stone-100 flex flex-col gap-4">
                   <div className="flex gap-4">
                     <button 
@@ -351,12 +517,54 @@ const AdminDashboard: React.FC = () => {
                     <button 
                       onClick={() => handleDelete(selectedStory.id)}
                       className="p-5 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition shadow-sm border border-red-100"
-                      title="Delete Permanently"
                     >
                       <Trash2 size={24} />
                     </button>
                   </div>
-                  <p className="text-center text-[10px] font-bold text-stone-300 uppercase tracking-widest">Caution: Deletion is permanent</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Expanded Review Modal (Suggestion) */}
+      <AnimatePresence>
+        {selectedSuggestion && (
+          <div className="fixed inset-0 z-[5000] flex items-center justify-center p-2 md:p-10 overflow-hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedSuggestion(null)} className="absolute inset-0 bg-stone-950/90 backdrop-blur-xl"></motion.div>
+            
+            <motion.div className="relative bg-white w-full max-w-6xl h-full md:h-[85vh] rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row z-10">
+              <div className="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto bg-stone-50 border-r border-stone-100">
+                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-6">Current Content</p>
+                <h4 className="text-2xl font-black text-stone-400 mb-4">{selectedSuggestion.cultural_content?.title}</h4>
+                <p className="text-stone-400 font-medium leading-relaxed whitespace-pre-wrap">{selectedSuggestion.cultural_content?.description}</p>
+              </div>
+
+              <div className="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto bg-white flex flex-col">
+                <div className="flex justify-between items-start mb-8">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Proposed Changes</p>
+                  <button onClick={() => setSelectedSuggestion(null)} className="text-stone-300 hover:text-stone-900 transition"><X size={28} /></button>
+                </div>
+
+                <h4 className="text-3xl md:text-4xl font-black text-stone-900 mb-6 tracking-tighter leading-tight">{selectedSuggestion.suggested_title}</h4>
+                <div className="flex-1">
+                  <p className="text-stone-600 text-lg font-medium leading-relaxed whitespace-pre-wrap">{selectedSuggestion.suggested_description}</p>
+                </div>
+
+                <div className="mt-12 pt-10 border-t border-stone-100 flex gap-4">
+                  <button 
+                    onClick={() => handleApproveSuggestion(selectedSuggestion)}
+                    className="flex-1 flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl bg-green-600 text-white hover:bg-green-700 transition-all shadow-lg"
+                  >
+                    <CheckCircle2 size={18} /> Apply Changes
+                  </button>
+                  <button 
+                    onClick={() => handleRejectSuggestion(selectedSuggestion.id)}
+                    className="flex-1 flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 transition-all"
+                  >
+                    <Trash2 size={18} /> Reject
+                  </button>
                 </div>
               </div>
             </motion.div>

@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, ChevronLeft, MapPin, Camera, Heart, CheckCircle2, FileVideo, ImageIcon, X, ArrowRight, Share2 } from 'lucide-react';
-import { fetchDistrictContent, submitContent } from '../services/api';
+import { Upload, ChevronLeft, MapPin, Camera, Heart, CheckCircle2, FileVideo, ImageIcon, X, ArrowRight, Share2, Plus, Edit3, User, ChevronRight } from 'lucide-react';
+import { fetchDistrictContent, submitContent, suggestEdit } from '../services/api';
 
 const DistrictPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [content, setContent] = useState<any[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [itinerary, setItinerary] = useState<string[]>([]);
   const [selectedStory, setSelectedStory] = useState<any | null>(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   const categories = ['all', 'festivals', 'events', 'tourist places', 'food', 'craft', 'heritage', 'hidden gems'];
 
@@ -20,9 +23,15 @@ const DistrictPage: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'festivals'
+    category: 'festivals',
+    contributor: ''
+  });
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: ''
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadParentId, setUploadParentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -32,12 +41,49 @@ const DistrictPage: React.FC = () => {
     setItinerary(saved);
   }, [id]);
 
+  useEffect(() => {
+    if (selectedStory || showUploadModal || showEditModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedStory, showUploadModal, showEditModal]);
+
   const loadContent = async () => {
     try {
       const data = await fetchDistrictContent(id!);
-      setContent(data || []);
+      // Group items by their parent or if they are a parent
+      const parents = data.filter((item: any) => !item.parent_id);
+      const children = data.filter((item: any) => item.parent_id);
+
+      const grouped = parents.map((parent: any) => ({
+        ...parent,
+        media_items: [parent, ...children.filter((child: any) => child.parent_id === parent.id)]
+      }));
+
+      setContent(grouped || []);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const scrollToIndex = (index: number) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        left: index * scrollRef.current.offsetWidth,
+        behavior: 'smooth'
+      });
+      setCurrentMediaIndex(index);
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const index = Math.round(scrollRef.current.scrollLeft / scrollRef.current.offsetWidth);
+      setCurrentMediaIndex(index);
     }
   };
 
@@ -55,7 +101,7 @@ const DistrictPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return alert('Please select a photo or video');
+    if (!selectedFile && !uploadParentId) return alert('Please select a photo or video');
 
     setIsSubmitting(true);
     try {
@@ -64,22 +110,71 @@ const DistrictPage: React.FC = () => {
       data.append('description', formData.description);
       data.append('category', formData.category);
       data.append('district', id || '');
-      data.append('media', selectedFile);
-      data.append('contributor', 'Guest User');
+      if (selectedFile) data.append('media', selectedFile);
+      data.append('contributor', formData.contributor || 'Guest User');
+      if (uploadParentId) data.append('parentId', uploadParentId);
 
       await submitContent(data);
       setSubmitted(true);
       setTimeout(() => {
         setShowUploadModal(false);
         setSubmitted(false);
-        setFormData({ title: '', description: '', category: 'festivals' });
+        setFormData({ title: '', description: '', category: 'festivals', contributor: '' });
         setSelectedFile(null);
+        setUploadParentId(null);
       }, 2000);
     } catch (err) {
       alert('Failed to submit story');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSuggestEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStory) return;
+
+    console.log("Submitting edit for story ID:", selectedStory.id);
+    setIsSubmitting(true);
+    try {
+      const result = await suggestEdit(selectedStory.id, editFormData.title, editFormData.description);
+      console.log("Suggestion submitted successfully:", result);
+      setSubmitted(true);
+      setTimeout(() => {
+        setShowEditModal(false);
+        setSubmitted(false);
+        setEditFormData({ title: '', description: '' });
+      }, 2000);
+    } catch (err) {
+      console.error("Error submitting suggested edits:", err);
+      alert('Failed to suggest edits. Please check your connection or database schema.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openAddPhoto = (e: React.MouseEvent, story: any) => {
+    e.stopPropagation();
+    setUploadParentId(story.id);
+    setFormData({
+      ...formData,
+      title: story.title,
+      description: story.description,
+      category: story.category
+    });
+    setSubmitted(false);
+    setShowUploadModal(true);
+  };
+
+  const openEditStory = (e: React.MouseEvent, story: any) => {
+    e.stopPropagation();
+    setEditFormData({
+      title: story.title,
+      description: story.description
+    });
+    setSubmitted(false);
+    // Removed setSelectedStory(null) to keep it in background
+    setShowEditModal(true);
   };
 
   const filteredContent = content.filter(item => 
@@ -118,7 +213,11 @@ const DistrictPage: React.FC = () => {
             <motion.button 
               whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowUploadModal(true)}
+              onClick={() => {
+                setUploadParentId(null);
+                setFormData({ title: '', description: '', category: 'festivals', contributor: '' });
+                setShowUploadModal(true);
+              }}
               className="bg-white text-stone-900 px-6 md:px-10 py-4 md:py-5 rounded-full font-black shadow-2xl flex items-center gap-3 hover:bg-amber-50 transition border-none text-sm md:text-base w-fit"
             >
               <Camera size={20} className="text-amber-600" />
@@ -153,7 +252,10 @@ const DistrictPage: React.FC = () => {
                 <motion.div 
                   key={item.id}
                   layoutId={`story-${item.id}`}
-                  onClick={() => setSelectedStory(item)}
+                  onClick={() => {
+                    setSelectedStory(item);
+                    setCurrentMediaIndex(0);
+                  }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-stone-100 group cursor-pointer hover:shadow-2xl transition-all duration-500 relative"
@@ -164,7 +266,14 @@ const DistrictPage: React.FC = () => {
                     ) : (
                       <img src={item.media_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-1000" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                      <div className="flex gap-2">
+                        <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-black uppercase flex items-center gap-1">
+                          <ImageIcon size={12} />
+                          {item.media_items?.length || 1} Media
+                        </div>
+                      </div>
+                    </div>
                     
                     <button 
                       onClick={(e) => handleToggleItinerary(e, item.id)}
@@ -181,7 +290,10 @@ const DistrictPage: React.FC = () => {
                     <motion.h3 layoutId={`title-${item.id}`} className="text-2xl md:text-3xl font-black text-stone-900 mt-2 md:mt-3 leading-tight tracking-tighter">{item.title}</motion.h3>
                     <p className="text-stone-500 text-sm mt-3 md:mt-4 line-clamp-2 font-medium leading-relaxed">{item.description}</p>
                     <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-stone-50 flex items-center justify-between">
-                      <span className="text-stone-300 font-bold text-[8px] md:text-[10px] uppercase tracking-widest">By {item.contributor}</span>
+                      <div className="flex flex-col">
+                        <span className="text-stone-300 font-bold text-[8px] md:text-[10px] uppercase tracking-widest">Original by</span>
+                        <span className="text-stone-600 font-black text-xs uppercase tracking-tight">{item.contributor}</span>
+                      </div>
                       <ArrowRight size={18} className="text-amber-800 group-hover:translate-x-2 transition-transform" />
                     </div>
                   </div>
@@ -194,83 +306,150 @@ const DistrictPage: React.FC = () => {
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black text-stone-900 mb-2 tracking-tight">The story is yet to be told</h3>
                 <p className="text-stone-400 font-medium mb-8 md:mb-10 max-w-xs mx-auto text-sm md:text-base">Be the first to document the cultural heritage of {id}.</p>
-                <button onClick={() => setShowUploadModal(true)} className="bg-amber-800 text-white px-8 md:px-10 py-3 md:py-4 rounded-full font-black hover:bg-amber-900 transition shadow-xl text-sm md:text-base">Start documenting {id}</button>
+                <button onClick={() => {
+                  setUploadParentId(null);
+                  setShowUploadModal(true);
+                }} className="bg-amber-800 text-white px-8 md:px-10 py-3 md:py-4 rounded-full font-black hover:bg-amber-900 transition shadow-xl text-sm md:text-base">Start documenting {id}</button>
               </div>
             )}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Cinematic Expanded View */}
       <AnimatePresence>
         {selectedStory && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center p-2 md:p-12 overflow-hidden">
+          <div className="fixed inset-0 z-[5000] flex items-center justify-center p-2 md:p-12 overflow-hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedStory(null)} className="absolute inset-0 bg-stone-950/90 backdrop-blur-xl"></motion.div>
             
             <motion.div 
               layoutId={`story-${selectedStory.id}`}
-              className="relative bg-white w-full max-w-6xl h-full md:h-[85vh] rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row z-10"
+              className="relative bg-white w-full max-w-7xl h-full md:h-[90vh] rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row z-10"
             >
-              <motion.div layoutId={`media-${selectedStory.id}`} className="w-full md:w-3/5 h-[40vh] md:h-auto bg-stone-900 relative flex-shrink-0">
-                {selectedStory.type === 'video' ? (
-                  <video src={selectedStory.media_url} controls autoPlay className="w-full h-full object-contain" />
-                ) : (
-                  <img src={selectedStory.media_url} alt={selectedStory.title} className="w-full h-full object-cover" />
-                )}
-                <button onClick={() => setSelectedStory(null)} className="absolute top-4 left-4 md:top-8 md:left-8 p-3 md:p-4 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-all"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
-              </motion.div>
-
-              <div className="w-full md:w-2/5 p-6 md:p-16 overflow-y-auto bg-[#fdfcf7] flex flex-col">
-                <div className="flex justify-between items-start mb-8 md:mb-12">
-                  <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] border border-amber-100">
-                    <ImageIcon size={12} />
-                    {selectedStory.category}
-                  </div>
-                  <button onClick={() => setSelectedStory(null)} className="hidden md:flex p-2 text-stone-300 hover:text-stone-900 transition hover:bg-stone-100 rounded-full"><X size={28} /></button>
+              <motion.div layoutId={`media-${selectedStory.id}`} className="w-full md:w-[65%] h-[45vh] md:h-auto bg-stone-950 relative flex-shrink-0 group/media">
+                <div 
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                  className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                >
+                  {selectedStory.media_items?.map((media: any, idx: number) => (
+                    <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                      {media.type === 'video' ? (
+                        <video src={media.media_url} controls className="w-full h-full object-contain" />
+                      ) : (
+                        <img src={media.media_url} alt={selectedStory.title} className="w-full h-full object-cover" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 pointer-events-none"></div>
+                    </div>
+                  ))}
                 </div>
 
-                <motion.h3 layoutId={`title-${selectedStory.id}`} className="text-3xl md:text-6xl font-black text-stone-900 mb-6 md:mb-8 tracking-tighter leading-[0.9]">
-                  {selectedStory.title}
-                </motion.h3>
+                {/* Media Navigation Dots */}
+                {selectedStory.media_items?.length > 1 && (
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                    {selectedStory.media_items.map((_: any, idx: number) => (
+                      <button 
+                        key={idx} 
+                        onClick={() => scrollToIndex(idx)}
+                        className={`h-1.5 transition-all rounded-full ${currentMediaIndex === idx ? 'w-8 bg-white shadow-lg' : 'w-2 bg-white/40 hover:bg-white/60'}`}
+                      ></button>
+                    ))}
+                  </div>
+                )}
 
-                <div className="flex flex-wrap items-center gap-4 md:gap-6 mb-8 md:mb-10 text-stone-400">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-amber-200 flex items-center justify-center text-amber-800 font-black text-[10px]">
-                      {selectedStory.contributor?.[0]}
+                {/* Scroll Instructions/Arrows */}
+                {selectedStory.media_items?.length > 1 && (
+                  <>
+                    {currentMediaIndex > 0 && (
+                      <button 
+                        onClick={() => scrollToIndex(currentMediaIndex - 1)}
+                        className="absolute left-8 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-all z-20 hidden md:block"
+                      >
+                        <ChevronLeft size={48} strokeWidth={1} />
+                      </button>
+                    )}
+                    {currentMediaIndex < selectedStory.media_items.length - 1 && (
+                      <button 
+                        onClick={() => scrollToIndex(currentMediaIndex + 1)}
+                        className="absolute right-8 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-all z-20 hidden md:block"
+                      >
+                        <ChevronRight size={48} strokeWidth={1} />
+                      </button>
+                    )}
+                  </>
+                )}
+
+                <button onClick={() => setSelectedStory(null)} className="absolute top-6 left-6 md:top-10 md:left-10 p-4 bg-black/20 hover:bg-black/60 text-white rounded-full backdrop-blur-xl transition-all z-20"><X className="w-6 h-6" /></button>
+                
+                <div className="absolute bottom-8 left-8 md:bottom-12 md:left-12 flex items-center gap-4 z-20">
+                  <div className="flex items-center gap-3 bg-white/10 backdrop-blur-2xl px-6 py-3 rounded-2xl border border-white/10">
+                    <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-black text-sm">
+                      {selectedStory.media_items?.[currentMediaIndex]?.contributor?.[0] || 'G'}
                     </div>
                     <div>
-                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-stone-300">Contributor</p>
-                      <p className="text-xs md:text-sm font-bold text-stone-900 uppercase tracking-tight">{selectedStory.contributor}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Contributor</p>
+                      <p className="text-sm font-bold text-white uppercase tracking-tight">
+                        {selectedStory.media_items?.[currentMediaIndex]?.contributor || 'Guest User'}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-stone-100 flex items-center justify-center text-stone-400">
-                      <MapPin size={16} />
-                    </div>
-                    <div>
-                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-stone-300">District</p>
-                      <p className="text-xs md:text-sm font-bold text-stone-900 uppercase tracking-tight capitalize">{selectedStory.district}</p>
-                    </div>
+                </div>
+              </motion.div>
+
+              <div className="w-full md:w-[35%] p-8 md:p-16 overflow-y-auto bg-[#fdfcf7] flex flex-col border-l border-stone-100">
+                <div className="flex justify-between items-start mb-10 md:mb-14">
+                  <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-amber-100">
+                    <ImageIcon size={14} />
+                    {selectedStory.category}
                   </div>
+                  <button onClick={() => setSelectedStory(null)} className="hidden md:flex p-2 text-stone-300 hover:text-stone-900 transition hover:bg-stone-100 rounded-full"><X size={32} /></button>
+                </div>
+
+                <div className="relative group/title mb-8 md:mb-10">
+                  <motion.h3 layoutId={`title-${selectedStory.id}`} className="text-4xl md:text-7xl font-black text-stone-900 tracking-tighter leading-[0.85]">
+                    {selectedStory.title}
+                  </motion.h3>
+                  <button 
+                    onClick={(e) => openEditStory(e, selectedStory)}
+                    className="absolute -right-4 -top-4 opacity-0 group-hover/title:opacity-100 transition p-2 bg-white shadow-xl rounded-full text-amber-800 hover:scale-110"
+                  >
+                    <Edit3 size={18} />
+                  </button>
                 </div>
 
                 <div className="flex-1">
-                  <p className="text-stone-600 text-base md:text-xl font-medium leading-relaxed whitespace-pre-wrap first-letter:text-4xl md:first-letter:text-5xl first-letter:font-black first-letter:text-amber-800 first-letter:mr-2 first-letter:float-left">
-                    {selectedStory.description}
-                  </p>
+                  <div className="relative group/desc">
+                    <p className="text-stone-600 text-lg md:text-2xl font-medium leading-relaxed whitespace-pre-wrap first-letter:text-5xl md:first-letter:text-6xl first-letter:font-black first-letter:text-amber-800 first-letter:mr-3 first-letter:float-left mb-8">
+                      {selectedStory.description}
+                    </p>
+                    <button 
+                      onClick={(e) => openEditStory(e, selectedStory)}
+                      className="absolute right-0 bottom-0 opacity-0 group-hover/desc:opacity-100 transition p-3 bg-amber-50 text-amber-800 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 border border-amber-100"
+                    >
+                      <Edit3 size={14} /> Suggest Changes
+                    </button>
+                  </div>
                 </div>
 
-                <div className="mt-10 md:mt-12 pt-8 md:pt-10 border-t border-stone-100 flex items-center justify-between pb-4 md:pb-0">
+                <div className="mt-12 md:mt-16 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={(e) => handleToggleItinerary(e, selectedStory.id)}
+                      className={`flex-1 flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] transition-all py-5 rounded-2xl ${
+                        itinerary.includes(selectedStory.id) ? 'bg-amber-600 text-white shadow-2xl scale-105' : 'bg-white text-stone-400 hover:text-amber-800 shadow-sm border border-stone-100'
+                      }`}
+                    >
+                      <Heart className="w-5 h-5" fill={itinerary.includes(selectedStory.id) ? "currentColor" : "none"} />
+                      {itinerary.includes(selectedStory.id) ? 'Saved to Journey' : 'Save for Later'}
+                    </button>
+                    <button className="p-5 bg-white text-stone-400 hover:text-stone-900 transition shadow-sm border border-stone-100 rounded-2xl"><Share2 size={20} /></button>
+                  </div>
+
                   <button 
-                    onClick={(e) => handleToggleItinerary(e, selectedStory.id)}
-                    className={`flex items-center gap-2 md:gap-3 font-black text-[10px] uppercase tracking-[0.2em] transition-all py-3 md:py-4 px-6 md:px-8 rounded-xl md:rounded-2xl ${
-                      itinerary.includes(selectedStory.id) ? 'bg-amber-600 text-white shadow-xl scale-105' : 'bg-white text-stone-400 hover:text-amber-800 shadow-sm border border-stone-100'
-                    }`}
+                    onClick={(e) => openAddPhoto(e, selectedStory)}
+                    className="w-full flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] bg-stone-900 text-white py-5 rounded-2xl hover:bg-stone-800 transition shadow-2xl"
                   >
-                    <Heart className="w-4 h-4 md:w-4.5 md:h-4.5" fill={itinerary.includes(selectedStory.id) ? "currentColor" : "none"} />
-                    {itinerary.includes(selectedStory.id) ? 'Saved' : 'Save'}
+                    <Plus size={20} /> Add Your Perspective
                   </button>
-                  <button className="p-3 md:p-4 bg-white text-stone-400 hover:text-stone-900 transition shadow-sm border border-stone-100 rounded-xl md:rounded-2xl"><Share2 className="w-4.5 h-4.5 md:w-5 md:h-5" /></button>
                 </div>
               </div>
             </motion.div>
@@ -281,7 +460,7 @@ const DistrictPage: React.FC = () => {
       {/* Upload Modal */}
       <AnimatePresence>
         {showUploadModal && (
-          <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4 md:p-6">
+          <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 md:p-6">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !isSubmitting && setShowUploadModal(false)} className="absolute inset-0 bg-stone-950/80 backdrop-blur-md"></motion.div>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl w-full max-w-xl p-8 md:p-12 overflow-hidden border border-stone-100 max-h-[95vh] overflow-y-auto">
               <div className="absolute top-0 left-0 w-full h-2 md:h-3 bg-amber-600"></div>
@@ -291,13 +470,15 @@ const DistrictPage: React.FC = () => {
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1, rotate: [0, 10, -10, 0] }} className="w-20 h-20 md:w-24 md:h-24 bg-green-50 text-green-600 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-inner">
                     <CheckCircle2 className="w-10 h-10 md:w-12 md:h-12" />
                   </motion.div>
-                  <h3 className="text-3xl md:text-4xl font-black text-stone-900 mb-4 tracking-tighter">Story Shared!</h3>
-                  <p className="text-stone-500 font-medium text-base md:text-lg px-4">Your discovery is now being reviewed by the elders in the moderation vault.</p>
+                  <h3 className="text-3xl md:text-4xl font-black text-stone-900 mb-4 tracking-tighter">Contribution Received!</h3>
+                  <p className="text-stone-500 font-medium text-base md:text-lg px-4">Your perspective is being validated. It will join the story once approved.</p>
                 </div>
               ) : (
                 <>
                   <div className="flex justify-between items-center mb-8 md:mb-10">
-                    <h3 className="text-3xl md:text-4xl font-black text-stone-900 tracking-tighter leading-none">Share a <span className="text-amber-600">Discovery</span></h3>
+                    <h3 className="text-3xl md:text-4xl font-black text-stone-900 tracking-tighter leading-none">
+                      {uploadParentId ? 'Add to ' : 'Share a '} <span className="text-amber-600">{uploadParentId ? 'Story' : 'Discovery'}</span>
+                    </h3>
                     <button onClick={() => setShowUploadModal(false)} className="p-2 text-stone-300 hover:text-stone-900 transition"><X size={24} /></button>
                   </div>
                   
@@ -328,20 +509,82 @@ const DistrictPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-3 md:space-y-4">
-                      <input required type="text" placeholder="Title of the story" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none focus:ring-4 focus:ring-amber-100 font-black text-stone-900 tracking-tight transition-all border border-stone-100 text-sm md:text-base" />
-                      <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none font-black text-stone-900 capitalize border border-stone-100 text-sm md:text-base">
-                        {categories.filter(c => c !== 'all').map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                      <textarea required placeholder="Write the cultural significance here..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-stone-700 h-32 md:h-40 transition-all border border-stone-100 resize-none text-sm md:text-base"></textarea>
+                      <div className="relative">
+                        <User className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-300" size={18} />
+                        <input type="text" placeholder="Your Name (Optional)" value={formData.contributor} onChange={(e) => setFormData({...formData, contributor: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl pl-14 pr-5 py-4 md:py-5 outline-none focus:ring-4 focus:ring-amber-100 font-bold text-stone-900 transition-all border border-stone-100 text-sm md:text-base" />
+                      </div>
+
+                      {!uploadParentId && (
+                        <>
+                          <input required type="text" placeholder="Title of the story" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none focus:ring-4 focus:ring-amber-100 font-black text-stone-900 tracking-tight transition-all border border-stone-100 text-sm md:text-base" />
+                          <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none font-black text-stone-900 capitalize border border-stone-100 text-sm md:text-base">
+                            {categories.filter(c => c !== 'all').map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                          <textarea required placeholder="Write the cultural significance here..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-stone-700 h-32 md:h-40 transition-all border border-stone-100 resize-none text-sm md:text-base"></textarea>
+                        </>
+                      )}
+
+                      {uploadParentId && (
+                        <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                          <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Adding to</p>
+                          <p className="text-sm font-bold text-stone-900">{formData.title}</p>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex gap-4 pt-2">
                       <button type="submit" disabled={isSubmitting} className="w-full bg-amber-800 text-white rounded-xl md:rounded-2xl py-5 md:py-6 font-black hover:bg-amber-900 transition-all disabled:opacity-50 shadow-2xl uppercase tracking-widest text-[10px] md:text-sm">
-                        {isSubmitting ? 'Uploading to vault...' : 'Complete Contribution'}
+                        {isSubmitting ? 'Submitting to Elders...' : uploadParentId ? 'Add Photo' : 'Complete Contribution'}
                       </button>
                     </div>
+                  </form>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Suggestion Modal */}
+      <AnimatePresence>
+        {showEditModal && (
+          <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 md:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !isSubmitting && setShowEditModal(false)} className="absolute inset-0 bg-stone-950/80 backdrop-blur-md"></motion.div>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl w-full max-w-xl p-8 md:p-12 overflow-hidden border border-stone-100 max-h-[95vh] overflow-y-auto">
+              <div className="absolute top-0 left-0 w-full h-2 md:h-3 bg-stone-900"></div>
+              
+              {submitted ? (
+                <div className="py-12 md:py-16 text-center">
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-20 h-20 md:w-24 md:h-24 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mx-auto mb-6 md:mb-8">
+                    <CheckCircle2 className="w-10 h-10 md:w-12 md:h-12" />
+                  </motion.div>
+                  <h3 className="text-3xl md:text-4xl font-black text-stone-900 mb-4 tracking-tighter">Edit Suggested!</h3>
+                  <p className="text-stone-500 font-medium text-base md:text-lg">The moderators will review your suggested improvements.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center mb-8 md:mb-10">
+                    <h3 className="text-3xl md:text-4xl font-black text-stone-900 tracking-tighter leading-none">Suggest <span className="text-amber-600">Edits</span></h3>
+                    <button onClick={() => setShowEditModal(false)} className="p-2 text-stone-300 hover:text-stone-900 transition"><X size={24} /></button>
+                  </div>
+                  
+                  <form onSubmit={handleSuggestEdit} className="space-y-4 md:space-y-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 mb-2 block">Title Improvement</label>
+                        <input required type="text" placeholder="Title of the story" value={editFormData.title} onChange={(e) => setEditFormData({...editFormData, title: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none focus:ring-4 focus:ring-amber-100 font-black text-stone-900 tracking-tight transition-all border border-stone-100 text-sm md:text-base" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 mb-2 block">Description Improvement</label>
+                        <textarea required placeholder="Write the improved cultural significance here..." value={editFormData.description} onChange={(e) => setEditFormData({...editFormData, description: e.target.value})} className="w-full bg-stone-50 rounded-xl md:rounded-2xl px-5 md:px-6 py-4 md:py-5 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-stone-700 h-48 md:h-60 transition-all border border-stone-100 resize-none text-sm md:text-base"></textarea>
+                      </div>
+                    </div>
+                    
+                    <button type="submit" disabled={isSubmitting} className="w-full bg-stone-900 text-white rounded-xl md:rounded-2xl py-5 md:py-6 font-black hover:bg-stone-800 transition-all disabled:opacity-50 shadow-2xl uppercase tracking-widest text-[10px] md:text-sm">
+                      {isSubmitting ? 'Submitting Improvements...' : 'Send Suggested Edits'}
+                    </button>
                   </form>
                 </>
               )}

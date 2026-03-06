@@ -28,51 +28,83 @@ export const submitContent = async (formData: FormData) => {
   const description = formData.get('description') as string;
   const category = formData.get('category') as string;
   const district = formData.get('district') as string;
-  const contributor = formData.get('contributor') as string;
+  const contributor = formData.get('contributor') as string || 'Guest User';
+  const parentId = formData.get('parentId') as string | null;
 
-  console.log("Starting upload for:", file.name);
+  console.log("Starting upload for:", file ? file.name : "suggestion");
 
-  // 1. Upload file to Supabase Storage (bucket named 'media')
-  const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
-  const { data: uploadData, error: uploadError } = await supabase.storage
-    .from('media')
-    .upload(fileName, file);
+  let publicUrl = null;
+  let type = 'image';
 
-  if (uploadError) {
-    console.error("Supabase Storage Error:", uploadError);
-    throw uploadError;
+  if (file) {
+    // 1. Upload file to Supabase Storage (bucket named 'media')
+    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('media')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error("Supabase Storage Error:", uploadError);
+      throw uploadError;
+    }
+
+    // 2. Get Public URL
+    const { data: { publicUrl: url } } = supabase.storage
+      .from('media')
+      .getPublicUrl(fileName);
+    
+    publicUrl = url;
+    type = file.type.startsWith('video') ? 'video' : 'image';
   }
 
-  console.log("Upload successful:", uploadData);
-
-  // 2. Get Public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('media')
-    .getPublicUrl(fileName);
-
-  console.log("Public URL generated:", publicUrl);
-
   // 3. Insert metadata into Database
+  const insertData: any = {
+    title,
+    description,
+    category,
+    district: district.toLowerCase(),
+    contributor,
+    media_url: publicUrl,
+    type,
+    status: 'pending'
+  };
+
+  // Only add parent_id if it's provided to avoid errors if the column doesn't exist yet
+  if (parentId) {
+    insertData.parent_id = parentId;
+  }
+
   const { data, error } = await supabase
     .from('cultural_content')
-    .insert([
-      {
-        title,
-        description,
-        category,
-        district: district.toLowerCase(),
-        contributor,
-        media_url: publicUrl,
-        type: file.type.startsWith('video') ? 'video' : 'image',
-        status: 'pending'
-      }
-    ]);
+    .insert([insertData]);
 
   if (error) {
     console.error("Supabase Database Error:", error);
     throw error;
   }
   
+  return data;
+};
+
+export const suggestEdit = async (id: string, title: string, description: string) => {
+  console.log("api.ts: suggestEdit called with:", { id, title, description });
+  const { data, error } = await supabase
+    .from('content_suggestions')
+    .insert([
+      {
+        content_id: id,
+        suggested_title: title,
+        suggested_description: description,
+        status: 'pending'
+      }
+    ])
+    .select();
+  
+  if (error) {
+    console.error("api.ts: suggestEdit error:", error);
+    throw error;
+  }
+  console.log("api.ts: suggestEdit success:", data);
   return data;
 };
 
