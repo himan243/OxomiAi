@@ -78,7 +78,7 @@ const NavBar = () => {
       </motion.nav>
 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[2000] md:hidden w-[90%] max-w-sm">
-        <div className="bg-stone-900/90 backdrop-blur-2xl rounded-3xl p-2 shadow-2xl border border-white/10 flex justify-between items-center px-4">
+        <div className="bg-stone-900/90 backdrop-blur-2xl rounded-3xl p-2 shadow-2xl border border-white/10 grid grid-cols-3 items-center">
           {navLinks.map(link => {
             const Icon = link.icon;
             const isActive = location.pathname === link.to;
@@ -86,7 +86,7 @@ const NavBar = () => {
               <Link 
                 key={link.to} 
                 to={link.to} 
-                className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-300 ${isActive ? 'bg-amber-600 text-white shadow-lg' : 'text-stone-400 hover:text-white'}`}
+                className={`flex flex-col items-center gap-1 py-3 rounded-2xl transition-all duration-300 ${isActive ? 'text-amber-500 scale-110' : 'text-stone-400'}`}
               >
                 <Icon size={20} />
                 <span className="text-[10px] font-black uppercase tracking-widest">{link.label}</span>
