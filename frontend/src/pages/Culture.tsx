@@ -25,6 +25,7 @@ const CulturePage: React.FC = () => {
     { name: 'all', icon: Sparkles },
     { name: 'bihu', icon: Music },
     { name: 'festivals', icon: Sparkles },
+    { name: 'heritage', icon: Landmark },
     { name: 'cuisine', icon: Utensils },
     { name: 'folklore', icon: History },
     { name: 'crafts', icon: Palette },
@@ -57,6 +58,18 @@ const CulturePage: React.FC = () => {
       setActiveTab(cat.toLowerCase());
     }
   }, [location.search]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedStory(null);
+        setShowUploadModal(false);
+        setShowEditModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   useEffect(() => {
     if (selectedStory || showUploadModal || showEditModal) {

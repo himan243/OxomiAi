@@ -17,7 +17,7 @@ const DistrictPage: React.FC = () => {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  const categories = ['all', 'festivals', 'events', 'tourist places', 'food', 'craft', 'heritage', 'hidden gems'];
+  const categories = ['all', 'festivals', 'bihu', 'events', 'tourist places', 'cuisine', 'crafts', 'folklore', 'heritage', 'attire', 'hidden gems'];
 
   // Form states
   const [formData, setFormData] = useState({
@@ -40,6 +40,18 @@ const DistrictPage: React.FC = () => {
     const saved = JSON.parse(localStorage.getItem('itinerary') || '[]');
     setItinerary(saved);
   }, [id]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedStory(null);
+        setShowUploadModal(false);
+        setShowEditModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   useEffect(() => {
     if (selectedStory || showUploadModal || showEditModal) {

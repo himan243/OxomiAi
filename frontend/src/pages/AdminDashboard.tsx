@@ -36,6 +36,29 @@ const AdminDashboard: React.FC = () => {
     }
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedStory(null);
+        setSelectedSuggestion(null);
+        setIsDirectEditing(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  useEffect(() => {
+    if (selectedStory || selectedSuggestion) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedStory, selectedSuggestion]);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -313,7 +336,7 @@ const AdminDashboard: React.FC = () => {
 
             <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full px-6 py-4 bg-stone-50 rounded-2xl border-none font-bold text-stone-900 focus:ring-4 focus:ring-amber-100 capitalize appearance-none">
               <option value="all">All Categories</option>
-              {['Festivals', 'Events', 'Tourist Places', 'Food', 'Craft', 'Heritage', 'Hidden Gems'].map(c => <option key={c} value={c.toLowerCase()}>{c}</option>)}
+              {['Festivals', 'Bihu', 'Events', 'Tourist Places', 'Cuisine', 'Crafts', 'Folklore', 'Heritage', 'Attire', 'Hidden Gems'].map(c => <option key={c} value={c.toLowerCase()}>{c}</option>)}
             </select>
 
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-6 py-4 bg-stone-50 rounded-2xl border-none font-bold text-stone-900 focus:ring-4 focus:ring-amber-100 appearance-none">

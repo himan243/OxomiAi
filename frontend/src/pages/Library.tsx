@@ -50,6 +50,17 @@ const Library: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedStory(null);
+        setShowEditModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  useEffect(() => {
     if (selectedStory || showEditModal) {
       document.body.style.overflow = 'hidden';
     } else {
