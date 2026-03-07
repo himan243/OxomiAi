@@ -117,19 +117,23 @@ const Home: React.FC = () => {
               className="grid grid-cols-2 gap-4 md:gap-6"
             >
               {[
-                { label: 'Bihu', img: '/bgr/bihu.jpg', color: 'bg-orange-500' },
-                { label: 'Festivals', img: '/bgr/tea_garden.jpg', color: 'bg-amber-500' },
-                { label: 'Cuisine', img: '/bgr/u-2.png', color: 'bg-stone-800' },
-                { label: 'Crafts', img: '/bgr/preview.png', color: 'bg-amber-800' }
+                { label: 'Bihu', img: '/bgr/bihu.jpg', color: 'bg-orange-500', cat: 'bihu' },
+                { label: 'Festivals', img: '/bgr/festivals.jpg', color: 'bg-amber-500', cat: 'festivals' },
+                { label: 'Cuisine', img: '/bgr/u-2.png', color: 'bg-stone-800', cat: 'cuisine' },
+                { label: 'Crafts', img: '/bgr/crafts.jpg', color: 'bg-amber-800', cat: 'crafts' }
               ].map((item, i) => (
-                <div key={i} className={`relative group aspect-[4/5] rounded-[2rem] overflow-hidden shadow-xl ${i % 2 === 1 ? 'mt-8 md:mt-12' : ''}`}>
+                <Link 
+                  key={i} 
+                  to={`/culture?cat=${item.cat}`}
+                  className={`relative group aspect-[4/5] rounded-[2rem] overflow-hidden shadow-xl ${i % 2 === 1 ? 'mt-8 md:mt-12' : ''}`}
+                >
                   <img src={item.img} alt={item.label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                   <div className="absolute bottom-6 left-6">
                     <p className="text-white font-black text-xl md:text-2xl tracking-tighter">{item.label}</p>
                     <div className={`w-8 h-1 ${item.color} mt-2 rounded-full`}></div>
                   </div>
-                </div>
+                </Link>
               ))}
             </motion.div>
           </div>

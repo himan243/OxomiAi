@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, ChevronLeft, Sparkles, Camera, Heart, CheckCircle2, 
@@ -9,6 +9,7 @@ import {
 import { fetchDistrictContent, submitContent, suggestEdit } from '../services/api';
 
 const CulturePage: React.FC = () => {
+  const location = useLocation();
   const [content, setContent] = useState<any[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -48,7 +49,14 @@ const CulturePage: React.FC = () => {
     loadContent();
     const saved = JSON.parse(localStorage.getItem('itinerary') || '[]');
     setItinerary(saved);
-  }, []);
+
+    // Handle initial category from URL
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('cat');
+    if (cat && categories.some(c => c.name === cat.toLowerCase())) {
+      setActiveTab(cat.toLowerCase());
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (selectedStory || showUploadModal || showEditModal) {

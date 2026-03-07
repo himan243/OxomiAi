@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ASSAM_DISTRICTS } from '../utils/districts';
 import { 
   Search, Calendar, Landmark, Sparkles, Filter, Heart, X, ArrowRight, Share2, 
-  Utensils, Palette, History, Map as MapIcon, ImageIcon, ChevronRight, Edit3, CheckCircle2, ChevronLeft
+  Utensils, Palette, History, Map as MapIcon, ImageIcon, ChevronRight, Edit3, CheckCircle2, ChevronLeft,
+  Music, User
 } from 'lucide-react';
 import { fetchAllContent, suggestEdit } from '../services/api';
 
@@ -28,11 +29,13 @@ const Library: React.FC = () => {
 
   const categories = [
     { name: 'Festivals', icon: Sparkles },
+    { name: 'Bihu', icon: Music },
     { name: 'Events', icon: Calendar },
     { name: 'Tourist Places', icon: Landmark },
-    { name: 'Food', icon: Utensils },
-    { name: 'Craft', icon: Palette },
-    { name: 'Heritage', icon: History },
+    { name: 'Food & Cuisine', icon: Utensils, match: ['food', 'cuisine'] },
+    { name: 'Crafts', icon: Palette, match: ['craft', 'crafts'] },
+    { name: 'Folklore', icon: History, match: ['heritage', 'folklore'] },
+    { name: 'Attire', icon: User },
     { name: 'Hidden Gems', icon: MapIcon }
   ];
 
@@ -137,10 +140,17 @@ const Library: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const filteredPosts = posts.filter(post => 
-    (selectedDistrict === 'all' || (post.district || '').toLowerCase() === selectedDistrict.toLowerCase()) &&
-    (post.category || '').toLowerCase() === activeTab.toLowerCase()
-  );
+  const activeCategoryObj = categories.find(c => c.name === activeTab);
+  
+  const filteredPosts = posts.filter(post => {
+    const matchesDistrict = selectedDistrict === 'all' || (post.district || '').toLowerCase() === selectedDistrict.toLowerCase();
+    
+    const postCat = (post.category || '').toLowerCase();
+    const matchesCategory = postCat === activeTab.toLowerCase() || 
+                          (activeCategoryObj?.match && activeCategoryObj.match.includes(postCat));
+    
+    return matchesDistrict && matchesCategory;
+  });
 
   return (
     <motion.div 
@@ -158,41 +168,46 @@ const Library: React.FC = () => {
         </header>
 
         {/* Filters */}
-        <div className="flex flex-col lg:flex-row gap-6 md:gap-8 items-start lg:items-center justify-between mb-10 md:mb-12">
-          <div className="flex flex-wrap gap-4 w-full lg:w-auto">
-            <div className="relative w-full md:w-auto">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-700" size={18} />
-              <select 
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-white rounded-2xl border-none shadow-sm font-bold text-amber-900 focus:ring-4 focus:ring-amber-100 appearance-none md:min-w-[240px]"
-              >
-                <option value="all">All Districts</option>
-                {ASSAM_DISTRICTS.map(d => (
-                  <option key={d} value={d.toLowerCase()}>{d}</option>
-                ))}
-              </select>
-            </div>
+        <div className="bg-white/50 backdrop-blur-md rounded-[2.5rem] p-4 md:p-6 mb-12 border border-white/80 shadow-sm flex flex-col lg:flex-row gap-6 items-center">
+          <div className="relative w-full lg:w-72 flex-shrink-0">
+            <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-700" size={18} />
+            <select 
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+              className="w-full pl-14 pr-10 py-4 bg-white rounded-2xl border border-stone-100 shadow-sm font-bold text-amber-900 focus:ring-4 focus:ring-amber-100 appearance-none capitalize transition-all"
+            >
+              <option value="all">All Districts</option>
+              <option value="unbounded">Soul of Assam</option>
+              {ASSAM_DISTRICTS.map(d => (
+                <option key={d} value={d.toLowerCase()}>{d}</option>
+              ))}
+            </select>
+            <ChevronRight className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-300 pointer-events-none rotate-90" size={18} />
           </div>
 
-          <div className="bg-stone-100 p-1.5 rounded-2xl flex flex-wrap gap-1 w-full lg:w-auto overflow-x-auto no-scrollbar">
-            {categories.map(cat => {
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.name}
-                  onClick={() => setActiveTab(cat.name)}
-                  className={`flex-1 md:flex-none px-4 md:px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs md:text-sm whitespace-nowrap ${
-                    activeTab === cat.name 
-                    ? 'bg-white text-amber-900 shadow-md scale-105' 
-                    : 'text-stone-500 hover:text-amber-800'
-                  }`}
-                >
-                  <Icon size={16} />
-                  {cat.name}
-                </button>
-              );
-            })}
+          <div className="h-10 w-px bg-stone-200 hidden lg:block mx-2"></div>
+
+          <div className="flex-1 w-full overflow-hidden">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+              {categories.map(cat => {
+                const Icon = cat.icon;
+                const isActive = activeTab === cat.name;
+                return (
+                  <button
+                    key={cat.name}
+                    onClick={() => setActiveTab(cat.name)}
+                    className={`px-6 py-3.5 rounded-2xl font-black transition-all flex items-center gap-2.5 text-xs md:text-sm whitespace-nowrap border-2 ${
+                      isActive 
+                      ? 'bg-amber-800 border-amber-800 text-white shadow-lg scale-105' 
+                      : 'bg-white border-transparent text-stone-500 hover:border-amber-100 hover:text-amber-800 shadow-sm'
+                    }`}
+                  >
+                    <Icon size={16} className={isActive ? 'text-amber-300' : 'text-stone-400'} />
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -259,6 +274,7 @@ const Library: React.FC = () => {
               ))
             ) : (
               <motion.div 
+                key="no-results"
                 className="col-span-full py-20 md:py-40 text-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -268,11 +284,11 @@ const Library: React.FC = () => {
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black text-stone-900 mb-2">No entries found</h3>
                 <p className="text-stone-500 font-medium">Try another district or category to discover something new.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
+                </motion.div>
+                )}
+                </AnimatePresence>
+                </motion.div>
+                </div>
 
       {/* Expanded Story View */}
       <AnimatePresence>
