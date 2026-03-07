@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, ChevronLeft, Sparkles, Camera, Heart, CheckCircle2, 
   FileVideo, ImageIcon, X, ArrowRight, Share2, Plus, Edit3, 
-  User, ChevronRight, Utensils, Palette, History, Music
+  User, ChevronRight, Utensils, Palette, History, Music, Landmark
 } from 'lucide-react';
 import { fetchDistrictContent, submitContent, suggestEdit } from '../services/api';
 
