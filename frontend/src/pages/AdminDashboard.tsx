@@ -20,6 +20,9 @@ const AdminDashboard: React.FC = () => {
   const [isDirectEditing, setIsDirectEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+
+  const availableCategories = ['Festivals', 'Bihu', 'Events', 'Tourist Places', 'Food & Cuisine', 'Crafts', 'Folklore', 'Heritage', 'Attire', 'Hidden Gems'];
 
   // Filter States
   const [filterDistrict, setFilterDistrict] = useState('all');
@@ -83,7 +86,8 @@ const AdminDashboard: React.FC = () => {
         .from('cultural_content')
         .update({
           title: editTitle,
-          description: editDesc
+          description: editDesc,
+          category: editCategory
         })
         .eq('id', selectedStory.id);
       
@@ -92,9 +96,15 @@ const AdminDashboard: React.FC = () => {
       setStories(stories.map(s => s.id === selectedStory.id ? { 
         ...s, 
         title: editTitle, 
-        description: editDesc 
+        description: editDesc,
+        category: editCategory
       } : s));
-      setSelectedStory({ ...selectedStory, title: editTitle, description: editDesc });
+      setSelectedStory({ 
+        ...selectedStory, 
+        title: editTitle, 
+        description: editDesc,
+        category: editCategory 
+      });
       setIsDirectEditing(false);
       alert('Content updated successfully!');
     } catch (err) {
@@ -201,6 +211,7 @@ const AdminDashboard: React.FC = () => {
   const startDirectEdit = () => {
     setEditTitle(selectedStory.title);
     setEditDesc(selectedStory.description);
+    setEditCategory(selectedStory.category || 'Festivals');
     setIsDirectEditing(true);
   };
 
@@ -398,6 +409,18 @@ const AdminDashboard: React.FC = () => {
                     <div>
                       <label className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2 block">Title</label>
                       <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full bg-white rounded-xl px-5 py-4 border-2 border-amber-100 focus:border-amber-500 outline-none font-black text-2xl tracking-tight" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2 block">Category</label>
+                      <select 
+                        value={editCategory} 
+                        onChange={(e) => setEditCategory(e.target.value)}
+                        className="w-full bg-white rounded-xl px-5 py-4 border-2 border-amber-100 focus:border-amber-500 outline-none font-bold text-lg appearance-none"
+                      >
+                        {availableCategories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2 block">Description</label>

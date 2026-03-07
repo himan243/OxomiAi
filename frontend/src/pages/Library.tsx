@@ -28,21 +28,25 @@ const Library: React.FC = () => {
   });
 
   const categories = [
-    { name: 'Festivals', icon: Sparkles },
-    { name: 'Bihu', icon: Music },
-    { name: 'Events', icon: Calendar },
-    { name: 'Tourist Places', icon: Landmark },
-    { name: 'Food & Cuisine', icon: Utensils, match: ['food', 'cuisine'] },
-    { name: 'Crafts', icon: Palette, match: ['craft', 'crafts'] },
-    { name: 'Folklore', icon: History, match: ['heritage', 'folklore'] },
-    { name: 'Attire', icon: User },
-    { name: 'Hidden Gems', icon: MapIcon }
+    { name: 'all', icon: Sparkles },
+    { name: 'bihu', icon: Music },
+    { name: 'festivals', icon: Sparkles, match: ['festival', 'festivals', 'celebration'] },
+    { name: 'heritage', icon: Landmark, match: ['heritage', 'history', 'ancient'] },
+    { name: 'events', icon: Calendar },
+    { name: 'tourist places', icon: Landmark, match: ['tourist place', 'tourist places', 'tourism', 'sightseeing', 'places to visit', 'landmark'] },
+    { name: 'cuisine', icon: Utensils, match: ['food', 'cuisine', 'delicacy'] },
+    { name: 'folklore', icon: History, match: ['heritage', 'folklore', 'history', 'tradition'] },
+    { name: 'crafts', icon: Palette, match: ['craft', 'crafts', 'art', 'textiles'] },
+    { name: 'attire', icon: User, match: ['attire', 'clothing', 'dress'] },
+    { name: 'hidden gems', icon: MapIcon, match: ['hidden gem', 'hidden gems', 'offbeat'] }
   ];
 
   useEffect(() => {
     loadPosts();
     const saved = JSON.parse(localStorage.getItem('itinerary') || '[]');
     setItinerary(saved);
+    // Set default tab to all to show everything initially
+    setActiveTab('all');
   }, []);
 
   useEffect(() => {
@@ -143,10 +147,13 @@ const Library: React.FC = () => {
   const activeCategoryObj = categories.find(c => c.name === activeTab);
   
   const filteredPosts = posts.filter(post => {
+    // District Filter
     const matchesDistrict = selectedDistrict === 'all' || (post.district || '').toLowerCase() === selectedDistrict.toLowerCase();
     
+    // Category Filter
     const postCat = (post.category || '').toLowerCase();
-    const matchesCategory = postCat === activeTab.toLowerCase() || 
+    const matchesCategory = activeTab === 'all' || 
+                          postCat === activeTab.toLowerCase() || 
                           (activeCategoryObj?.match && activeCategoryObj.match.includes(postCat));
     
     return matchesDistrict && matchesCategory;
