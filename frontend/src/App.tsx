@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
-import { Map as MapIcon, Library as LibraryIcon, Heart, Search, Shield } from 'lucide-react';
+import { Map as MapIcon, Library as LibraryIcon, Heart, Search, Shield, Sparkles } from 'lucide-react';
 import Home from './pages/Home';
 import DistrictPage from './pages/DistrictPage';
 import Itinerary from './pages/Itinerary';
 import AdminDashboard from './pages/AdminDashboard';
 import Library from './pages/Library';
+import Culture from './pages/Culture';
 import './App.css';
 
 const ScrollToTop = () => {
@@ -34,6 +35,7 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
         <Route path="/district/:id" element={<DistrictPage />} />
+        <Route path="/culture" element={<Culture />} />
         <Route path="/itinerary" element={<Itinerary />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/library" element={<Library />} />
@@ -53,6 +55,7 @@ const NavBar = () => {
 
   const navLinks = [
     { to: "/", label: "Map", icon: MapIcon },
+    { to: "/culture", label: "Culture", icon: Sparkles },
     { to: "/library", label: "Library", icon: LibraryIcon },
     { to: "/itinerary", label: "Journey", icon: Heart },
   ];
@@ -77,8 +80,8 @@ const NavBar = () => {
         </div>
       </motion.nav>
 
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[2000] md:hidden w-[90%] max-w-sm">
-        <div className="bg-stone-900/90 backdrop-blur-2xl rounded-3xl p-2 shadow-2xl border border-white/10 grid grid-cols-3 items-center">
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[2000] md:hidden w-[95%] max-w-md">
+        <div className="bg-stone-900/90 backdrop-blur-2xl rounded-3xl p-2 shadow-2xl border border-white/10 grid grid-cols-4 items-center">
           {navLinks.map(link => {
             const Icon = link.icon;
             const isActive = location.pathname === link.to;

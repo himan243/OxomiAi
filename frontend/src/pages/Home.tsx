@@ -1,7 +1,8 @@
 import React from 'react';
 import MapComponent from '../components/MapComponent';
 import { motion } from 'framer-motion';
-import { Compass, BookOpen, Users, ArrowDown } from 'lucide-react';
+import { Compass, BookOpen, Users, ArrowDown, Sparkles, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Home: React.FC = () => {
   return (
@@ -74,6 +75,63 @@ const Home: React.FC = () => {
           
           <div className="h-[500px] md:h-[750px] w-full relative group rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/80 backdrop-blur-sm bg-white/10">
             <MapComponent />
+          </div>
+        </div>
+      </section>
+
+      {/* Cultural Heritage Section - NEW */}
+      <section className="py-20 md:py-32 px-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-amber-50/30 -skew-x-12 translate-x-1/2 -z-10"></div>
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 text-orange-800 font-bold text-xs mb-6 border border-orange-100 uppercase tracking-widest">
+                <Sparkles size={14} />
+                <span>Assam Unbounded</span>
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black text-stone-900 mb-8 tracking-tighter leading-[0.9]">
+                The Soul of <br /><span className="text-amber-800">Our Heritage</span>
+              </h2>
+              <p className="text-lg md:text-xl text-stone-500 font-medium leading-relaxed mb-10 max-w-lg">
+                From the thunderous beats of Bihu drums to the intricate weaves of Muga silk, 
+                explore the traditions that transcend district borders.
+              </p>
+              <Link 
+                to="/culture" 
+                className="inline-flex items-center gap-4 bg-stone-900 text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-amber-800 transition-all shadow-2xl"
+              >
+                Explore Traditions
+                <ArrowRight size={18} />
+              </Link>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="grid grid-cols-2 gap-4 md:gap-6"
+            >
+              {[
+                { label: 'Bihu', img: '/bgr/bihu.jpg', color: 'bg-orange-500' },
+                { label: 'Festivals', img: '/bgr/tea_garden.jpg', color: 'bg-amber-500' },
+                { label: 'Cuisine', img: '/bgr/u-2.png', color: 'bg-stone-800' },
+                { label: 'Crafts', img: '/bgr/preview.png', color: 'bg-amber-800' }
+              ].map((item, i) => (
+                <div key={i} className={`relative group aspect-[4/5] rounded-[2rem] overflow-hidden shadow-xl ${i % 2 === 1 ? 'mt-8 md:mt-12' : ''}`}>
+                  <img src={item.img} alt={item.label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-6 left-6">
+                    <p className="text-white font-black text-xl md:text-2xl tracking-tighter">{item.label}</p>
+                    <div className={`w-8 h-1 ${item.color} mt-2 rounded-full`}></div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>

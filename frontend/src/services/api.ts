@@ -38,10 +38,16 @@ export const submitContent = async (formData: FormData) => {
 
   if (file) {
     // 1. Upload file to Supabase Storage (bucket named 'media')
-    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    // Sanitize filename: Remove special characters that might cause 400 errors
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+    const fileName = `${Date.now()}-${sanitizedName}`;
+    
     const { error: uploadError } = await supabase.storage
       .from('media')
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        contentType: file.type,
+        upsert: false
+      });
 
     if (uploadError) {
       console.error("Supabase Storage Error:", uploadError);
