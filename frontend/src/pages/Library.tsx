@@ -31,11 +31,11 @@ const Library: React.FC = () => {
     { name: 'all', icon: Sparkles },
     { name: 'bihu', icon: Music },
     { name: 'festivals', icon: Sparkles, match: ['festival', 'festivals', 'celebration'] },
-    { name: 'heritage', icon: Landmark, match: ['heritage', 'history', 'ancient'] },
+    { name: 'heritage', icon: Landmark, match: ['heritage', 'ancient', 'monument', 'site'] },
     { name: 'events', icon: Calendar },
     { name: 'tourist places', icon: Landmark, match: ['tourist place', 'tourist places', 'tourism', 'sightseeing', 'places to visit', 'landmark'] },
     { name: 'cuisine', icon: Utensils, match: ['food', 'cuisine', 'delicacy'] },
-    { name: 'folklore', icon: History, match: ['heritage', 'folklore', 'history', 'tradition'] },
+    { name: 'folklore', icon: History, match: ['folklore', 'history', 'tradition', 'myth', 'legend'] },
     { name: 'crafts', icon: Palette, match: ['craft', 'crafts', 'art', 'textiles'] },
     { name: 'attire', icon: User, match: ['attire', 'clothing', 'dress'] },
     { name: 'hidden gems', icon: MapIcon, match: ['hidden gem', 'hidden gems', 'offbeat'] }
@@ -195,7 +195,7 @@ const Library: React.FC = () => {
           <div className="h-10 w-px bg-stone-200 hidden lg:block mx-2"></div>
 
           <div className="flex-1 w-full overflow-hidden">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 px-1 no-scrollbar scroll-smooth">
               {categories.map(cat => {
                 const Icon = cat.icon;
                 const isActive = activeTab === cat.name;
