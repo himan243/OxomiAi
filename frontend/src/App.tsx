@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+import { AnimatePresence, motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { Map as MapIcon, Library as LibraryIcon, Heart, Search, Shield, Sparkles } from 'lucide-react';
 import Home from './pages/Home';
 import DistrictPage from './pages/DistrictPage';
@@ -49,6 +49,17 @@ const AnimatedRoutes = () => {
 const NavBar = () => {
   const { scrollY } = useScroll();
   const location = useLocation();
+  const [hidden, setHidden] = React.useState(false);
+  const lastScrollY = React.useRef(0);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    if (latest > lastScrollY.current && latest > 150) {
+      setHidden(true);
+    } else {
+      setHidden(false);
+    }
+    lastScrollY.current = latest;
+  });
   
   const desktopOpacity = useTransform(scrollY, [0, 200], [1, 0]);
   const desktopPointerEvents = useTransform(scrollY, (y) => y > 200 ? 'none' : 'auto');
@@ -80,7 +91,15 @@ const NavBar = () => {
         </div>
       </motion.nav>
 
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[2000] md:hidden w-[95%] max-w-md">
+      <motion.nav 
+        variants={{
+          visible: { y: 0, opacity: 1 },
+          hidden: { y: 100, opacity: 0 }
+        }}
+        animate={hidden ? "hidden" : "visible"}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[2000] md:hidden w-[95%] max-w-md"
+      >
         <div className="bg-stone-900/90 backdrop-blur-2xl rounded-3xl p-2 shadow-2xl border border-white/10 grid grid-cols-4 items-center">
           {navLinks.map(link => {
             const Icon = link.icon;
@@ -97,7 +116,7 @@ const NavBar = () => {
             );
           })}
         </div>
-      </nav>
+      </motion.nav>
 
       <div className="fixed top-6 left-6 z-[1000] md:hidden mix-blend-difference">
         <Link to="/" className="text-2xl font-black text-white tracking-tighter">OxomiAi</Link>
