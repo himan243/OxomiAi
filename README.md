@@ -1,78 +1,46 @@
 # OxomiAi: An Interactive Cultural Odyssey of Assam
 
-**OxomiAi** is a modern, district-wise cultural discovery platform for Assam, India. It empowers local communities to document and share their cultural heritage through storytelling, media, and interactive maps of all 35 districts.
+**OxomiAi** is a digital sanctuary dedicated to the diverse cultural heritage of Assam, India. It serves as a bridge between the popular tourist trail and the overlooked rural treasures, providing an immersive platform to discover, document, and preserve the traditions, festivals, and lore of all 35 districts.
+
+---
+
+## 🌿 The Vision
+Assam's beauty lies not just in its landscapes, but in the stories of its people—the rhythmic beat of the Bihu Dhol, the intricate patterns of Muga silk, and the ancient wisdom passed down through generations. OxomiAi uses a **"Modern Traditionalist"** aesthetic to bring these stories to life, combining cutting-edge web performance with textures and colors inspired by Assamese heritage.
+
+## 🧭 Who is it For?
+*   **Cultural Explorers:** For those seeking authentic, off-the-beaten-path experiences and hidden local gems.
+*   **The Next Generation:** A modern archive for youth to reconnect with their roots through a cinematic digital interface.
+*   **Local Communities:** A platform for artisans, elders, and residents to showcase their local pride to a global audience.
+*   **Storytellers:** A space for photographers and writers passionate about cultural documentation.
 
 ## ✨ Key Features
 
--   **Interactive Assam Map:** Explore all districts of Assam with smooth zoom-in animations, accurate boundaries, and hover-glow effects.
--   **Cinematic Storytelling:** Experience heritage through immersive, expandable story cards with high-quality images and videos.
--   **Community Contributions:** A direct-to-cloud upload system for locals to share photos and stories of festivals, food, and hidden gems.
--   **The Library:** A curated archive with advanced filtering by district and category (Festivals, Events, Tourist Places, etc.).
--   **Personal Journey:** Save favorite spots to a personal itinerary for future exploration.
--   **Moderation Vault:** A secure admin dashboard (`/admin`) for approving, reverifying, or deleting community submissions.
--   **Modern UI/UX:** A responsive, "glassmorphism" aesthetic with cinematic backgrounds, smooth transitions (Framer Motion), and a mobile-friendly floating dock.
+### 1. Interactive Cultural Map
+The heart of the experience. Navigate through a stylized map of Assam to explore each district. Every click opens a "Cultural Hub" dedicated to that region's unique identity.
 
-## 🚀 Tech Stack
+### 2. District Cultural Hubs
+Explore curated galleries for every district. Content is organized into intuitive categories:
+*   **Festivals:** From major celebrations like Bihu to localized tribal rituals.
+*   **Craft & Folk Art:** A deep dive into traditional weaving, pottery, and dance forms.
+*   **Food:** Discover the diverse flavors and ingredients of Assamese cuisine.
+*   **Hidden Gems:** Locations and stories that aren't found in standard travel guides.
 
--   **Frontend:** React (TypeScript), Vite, Tailwind CSS v4, Framer Motion, Lucide React.
--   **Map Engine:** Leaflet & React-Leaflet (GeoJSON-powered).
--   **Backend & Database:** Supabase (PostgreSQL, Storage, and SDK-direct integration).
--   **Icons:** Lucide React.
+### 3. The Library
+A centralized archive where you can search and filter the entire collection of cultural items by district, category, or media type.
 
-## 🛠️ Setup Instructions
+### 4. Community Co-Creation
+OxomiAi is powered by the people. Users can directly contribute by:
+*   **Submitting Stories:** Upload photos, videos, and descriptions of local heritage.
+*   **Suggesting Edits:** Help keep the archive accurate by suggesting improvements to existing entries.
 
-### 1. Supabase Configuration
-OxomiAi uses Supabase for database and media hosting.
-1.  Create a free project at [supabase.com](https://supabase.com).
-2.  **Database:** Run the following in the SQL Editor:
-    ```sql
-    create table cultural_content (
-      id uuid primary key default gen_random_uuid(),
-      title text,
-      description text,
-      category text,
-      district text,
-      contributor text,
-      type text,
-      status text default 'pending',
-      media_url text,
-      created_at timestamp with time zone default timezone('utc'::text, now())
-    );
-    ```
-3.  **Storage:** Create a **Public** bucket named `media`.
-4.  **Policies:** Add a policy to allow **INSERT** and **SELECT** for public users on the `media` bucket.
+### 5. Personal Journey
+Save your favorite districts or cultural spots to your "Personal Journey." This feature allows you to curate a custom itinerary for your future physical or digital explorations.
 
-### 2. Frontend Setup
-1.  Navigate to the frontend directory:
-    ```bash
-    cd frontend
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Configure Environment Variables:
-    Create a `.env` file in the `frontend` folder:
-    ```env
-    VITE_SUPABASE_URL=your_supabase_project_url
-    VITE_SUPABASE_ANON_KEY=your_supabase_anon_public_key
-    VITE_ADMIN_KEY=your_secure_admin_key
-    ```
-4.  Run the development server:
-    ```bash
-    npm run dev
-    ```
-
-## 🔐 Admin Access
-The moderation vault is accessible at `/admin`. Access is protected by the `VITE_ADMIN_KEY` environment variable.
-
-## 📂 Project Structure
--   `/frontend`: React application, components, and services.
--   `/bgr`: High-resolution background images for the storytelling experience.
--   `/backend`: Legacy Express server (optional, logic now moved to Supabase-direct).
-
-## 🌿 Backgrounds
-The site features custom photography from the `/bgr` folder, used as semi-transparent glassmorphic backgrounds to create an authentic Assamese atmosphere.
+## 📖 User Manual
+*   **Exploring:** Use the map on the home screen to select a district or jump straight into the **Library** for a specific search.
+*   **Contributing:** Click the "Share Your Story" button (available in the Library or District pages) to fill out the submission form. Your contribution will be reviewed by our curators for authenticity before appearing in the public vault.
+*   **Navigating on Mobile:** Use the floating navigation dock at the bottom of the screen. The bar intelligently hides as you scroll down to give you a full-screen cinematic view of the content and reappears when you scroll back up.
+*   **Saving Items:** Tap the "Heart" icon on any story card to save it to your Journey.
 
 ---
-*Created with ❤️ for the culture of Assam.*
+*Created with ❤️ for the preservation of Assam's vibrant heartbeat.*
