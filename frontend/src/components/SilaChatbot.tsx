@@ -87,15 +87,14 @@ const SilaChatbot: React.FC = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ 
               opacity: 1, 
-              y: 0, 
-              scale: 1,
-              height: isMinimized ? '64px' : '500px'
+              y: 0,
+              height: isMinimized ? 'auto' : '500px'
             }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className={`fixed right-6 bottom-24 w-[350px] md:w-[400px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col border border-gray-100 transition-all duration-300`}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed right-6 bottom-24 w-[350px] md:w-[400px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col border border-gray-100"
           >
             {/* Header */}
             <div className="p-4 bg-amber-600 text-white flex items-center justify-between shadow-lg">
