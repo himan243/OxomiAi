@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, User, Bot, Loader2, Minimize2, Maximize2, MapPin } from 'lucide-react';
+import { MessageSquare, X, Send, User, Bot, Loader2, Minimize2, Maximize2 } from 'lucide-react';
 import { getSilaResponse } from '../services/groq';
 import { useLocation } from 'react-router-dom';
 
