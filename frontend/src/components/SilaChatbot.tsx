@@ -37,7 +37,16 @@ const SilaChatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const chatHistory = [...messages, userMessage].map((m) => ({
+      // Filter out previous error messages and limit history to the last 6 messages to save tokens
+      const filteredHistory = messages
+        .filter(m => 
+          m.content !== "I'm having a bit of trouble connecting right now." &&
+          m.content !== "I'm sorry, I'm having some trouble connecting right now. Can you try again?" &&
+          !m.content.startsWith("Oops! I'm having a little trouble")
+        )
+        .slice(-6); // Keep only the most recent 6 messages
+
+      const chatHistory = [...filteredHistory, userMessage].map((m) => ({
         role: m.role as 'user' | 'assistant' | 'system',
         content: m.content
       }));

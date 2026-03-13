@@ -1,42 +1,26 @@
-import { fetchAllContent } from './api';
+import { fetchRecentContent } from './api';
 import { ASSAM_DISTRICTS } from '../utils/districts';
 
 export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | 'system', content: string }[], extraContext: string = '') => {
   try {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
     if (!apiKey) {
-      console.error("VITE_GROQ_API_KEY is not defined");
+      console.error("VITE_GROQ_API_KEY missing");
       return "Sila is not configured correctly. Please add the Groq API key.";
     }
 
-    // 1. Fetch all content to use as context
-    const data = await fetchAllContent();
-    const contentContext = data.map((item: any) => 
-      `District: ${item.district}\nCategory: ${item.category}\nTitle: ${item.title}\nDescription: ${item.description}`
-    ).join('\n\n');
-
-    const districtsList = ASSAM_DISTRICTS.join(', ');
+    // 1. Fetch only 5 most recent items to stay within token limits
+    const recentData = await fetchRecentContent(5);
+    const contentContext = recentData.map((item: any) => 
+      `${item.district}: ${item.title} - ${item.description.substring(0, 100)}...`
+    ).join('\n');
 
     const systemPrompt = {
       role: 'system' as const,
-      content: `You are "Sila", a friendly and knowledgeable AI travel assistant for Assam, India. 
-      Your knowledge is based on the following cultural content, blogs, and stories from our website:
-      
-      ${contentContext}
-
-      List of all districts in Assam: ${districtsList}
-
-      ${extraContext}
-
-      Guidelines:
-      - Answer questions based on the provided content. 
-      - If you don't know something from the provided content, use your general knowledge about Assam but state that it's based on general travel info.
-      - Help users plan trips to different districts of Assam.
-      - If asked about nearby places, suggest locations within the same district or neighboring districts.
-      - Keep your tone warm, welcoming, and helpful, reflecting the spirit of Assamese hospitality.
-      - Always mention the name of the district when providing information.
-      - "Sila" means "rock" or "stone" in Assamese, symbolizing the strength and ancient heritage of the land.
-      - If the user is currently on a district page (which will be mentioned in the context), prioritize information about that district.`
+      content: `You are "Sila", a friendly AI guide for Assam, India. 
+      Context: ${contentContext}
+      User Context: ${extraContext}
+      Rules: Be warm, mention the district, keep answers concise. If unsure, use general knowledge about Assam.`
     };
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -47,13 +31,15 @@ export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | '
       },
       body: JSON.stringify({
         messages: [systemPrompt, ...messages],
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
+        temperature: 0.7,
+        max_tokens: 512,
       })
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Groq API Error:", errorData);
+      const errorText = await response.text();
+      console.error("Groq API Error:", response.status, errorText);
       return "I'm having a bit of trouble connecting right now.";
     }
 

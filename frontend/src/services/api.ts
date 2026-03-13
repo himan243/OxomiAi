@@ -11,6 +11,18 @@ export const fetchAllContent = async () => {
   return data;
 };
 
+export const fetchRecentContent = async (limit: number = 5) => {
+  const { data, error } = await supabase
+    .from('cultural_content')
+    .select('district, title, description, category')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  
+  if (error) throw error;
+  return data;
+};
+
 export const fetchDistrictContent = async (districtId: string) => {
   const { data, error } = await supabase
     .from('cultural_content')
