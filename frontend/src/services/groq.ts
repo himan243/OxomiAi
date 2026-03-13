@@ -1,6 +1,7 @@
 import { fetchRecentContent, fetchDistrictContent, fetchAllContent } from './api';
+import { ASSAM_DISTRICTS } from '../utils/districts';
 
-export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | 'system', content: string }[], districtId: string | null = null) => {
+export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | 'system', content: string }[], currentDistrictId: string | null = null) => {
   try {
     const apiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
     if (!apiKey) {
@@ -8,45 +9,62 @@ export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | '
       return "Sila is not configured correctly. Please add the Groq API key.";
     }
 
-    // 1. Fetch relevant content
+    // 1. Detect if the user is asking about a specific district (if not already on a district page)
+    let targetDistrictId = currentDistrictId;
+    
+    if (!targetDistrictId) {
+      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content.toLowerCase() || '';
+      const mentionedDistrict = ASSAM_DISTRICTS.find(d => lastUserMessage.includes(d.toLowerCase()));
+      if (mentionedDistrict) {
+        targetDistrictId = mentionedDistrict;
+      }
+    }
+
+    // 2. Fetch relevant content
     let contextItems: any[] = [];
     
-    // If we have a districtId, prioritize that content
-    if (districtId) {
-      const districtData = await fetchDistrictContent(districtId);
+    // If we have a target district, fetch its content
+    if (targetDistrictId) {
+      const districtData = await fetchDistrictContent(targetDistrictId);
       contextItems = [...districtData];
     }
 
-    // Also fetch the 5 most recent global items to ensure variety
-    const recentData = await fetchRecentContent(5);
+    // Also fetch the 3 most recent global items for variety (reduced from 5 to save tokens)
+    const recentData = await fetchRecentContent(3);
     
-    // Merge and deduplicate by ID
+    // Merge and deduplicate
     const allData = [...contextItems, ...recentData];
     const uniqueItems = Array.from(new Map(allData.map(item => [item.id || item.title, item])).values());
     
-    // Limit to 8 items total to save tokens
-    const finalItems = uniqueItems.slice(0, 8);
+    // Limit to 6 items total for maximum reliability/speed
+    const finalItems = uniqueItems.slice(0, 6);
     const contentContext = finalItems.map((item: any) => 
-      `${item.district}: ${item.title} - ${item.description.substring(0, 120)}...`
-    ).join('\n');
+      `${item.district}: ${item.title} - ${item.description.substring(0, 150)}...`
+    ).join('\n\n');
 
-    // 2. Fetch all districts/titles for "global awareness" (very compact)
+    // 3. Compact coverage info
     const allApproved = await fetchAllContent();
     const coverageMap = allApproved.reduce((acc: any, item: any) => {
       acc[item.district] = (acc[item.district] || 0) + 1;
       return acc;
     }, {});
     const coverageInfo = Object.entries(coverageMap)
-      .map(([dist, count]) => `${dist}(${count} stories)`)
+      .map(([dist, count]) => `${dist}(${count})`)
       .join(', ');
 
     const systemPrompt = {
       role: 'system' as const,
-      content: `You are "Sila", an AI travel guide for OxomiAi. 
-      Available Stories: ${coverageInfo}
-      Detailed Context: ${contentContext}
-      Current Page: ${districtId || 'Home'}
-      Rules: Be warm, mention the district. If asked about a district not in 'Detailed Context' but in 'Available Stories', tell them we have content there and invite them to visit that district's page. Keep answers concise.`
+      content: `You are "Sila", the AI travel guide for OxomiAi. 
+      Website Coverage: ${coverageInfo}
+      Detailed Stories:
+      ${contentContext}
+      
+      User is interested in: ${targetDistrictId || 'General Assam'}
+      
+      Rules:
+      - Use the 'Detailed Stories' to provide specific heritage info. 
+      - If a district is in 'Website Coverage' but NOT in 'Detailed Stories', tell the user we have content there and encourage them to explore it.
+      - Keep answers warm and concise.`
     };
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
