@@ -1,5 +1,4 @@
 import { fetchRecentContent } from './api';
-import { ASSAM_DISTRICTS } from '../utils/districts';
 
 export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | 'system', content: string }[], extraContext: string = '') => {
   try {
