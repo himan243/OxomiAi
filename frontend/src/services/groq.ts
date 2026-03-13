@@ -1,14 +1,14 @@
-import Groq from 'groq-sdk';
 import { fetchAllContent } from './api';
 import { ASSAM_DISTRICTS } from '../utils/districts';
 
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true // This is needed for browser usage
-});
-
 export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | 'system', content: string }[], extraContext: string = '') => {
   try {
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) {
+      console.error("VITE_GROQ_API_KEY is not defined");
+      return "Sila is not configured correctly. Please add the Groq API key.";
+    }
+
     // 1. Fetch all content to use as context
     const data = await fetchAllContent();
     const contentContext = data.map((item: any) => 
@@ -39,14 +39,28 @@ export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | '
       - If the user is currently on a district page (which will be mentioned in the context), prioritize information about that district.`
     };
 
-    const completion = await groq.chat.completions.create({
-      messages: [systemPrompt, ...messages],
-      model: "llama-3.3-70b-versatile",
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: [systemPrompt, ...messages],
+        model: "llama-3.3-70b-versatile",
+      })
     });
 
-    return completion.choices[0]?.message?.content || "I'm sorry, I couldn't process that.";
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Groq API Error:", errorData);
+      return "I'm having a bit of trouble connecting right now.";
+    }
+
+    const result = await response.json();
+    return result.choices[0]?.message?.content || "I'm sorry, I couldn't process that.";
   } catch (error) {
-    console.error("Groq API Error:", error);
+    console.error("Chat API Error:", error);
     return "Oops! I'm having a little trouble right now. Please try again later.";
   }
 };
