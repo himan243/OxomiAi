@@ -1,6 +1,6 @@
-import { fetchRecentContent } from './api';
+import { fetchRecentContent, fetchDistrictContent, fetchAllContent } from './api';
 
-export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | 'system', content: string }[], extraContext: string = '') => {
+export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | 'system', content: string }[], districtId: string | null = null) => {
   try {
     const apiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
     if (!apiKey) {
@@ -8,18 +8,45 @@ export const getSilaResponse = async (messages: { role: 'user' | 'assistant' | '
       return "Sila is not configured correctly. Please add the Groq API key.";
     }
 
-    // 1. Fetch only 5 most recent items to stay within token limits
+    // 1. Fetch relevant content
+    let contextItems: any[] = [];
+    
+    // If we have a districtId, prioritize that content
+    if (districtId) {
+      const districtData = await fetchDistrictContent(districtId);
+      contextItems = [...districtData];
+    }
+
+    // Also fetch the 5 most recent global items to ensure variety
     const recentData = await fetchRecentContent(5);
-    const contentContext = recentData.map((item: any) => 
-      `${item.district}: ${item.title} - ${item.description.substring(0, 100)}...`
+    
+    // Merge and deduplicate by ID
+    const allData = [...contextItems, ...recentData];
+    const uniqueItems = Array.from(new Map(allData.map(item => [item.id || item.title, item])).values());
+    
+    // Limit to 8 items total to save tokens
+    const finalItems = uniqueItems.slice(0, 8);
+    const contentContext = finalItems.map((item: any) => 
+      `${item.district}: ${item.title} - ${item.description.substring(0, 120)}...`
     ).join('\n');
+
+    // 2. Fetch all districts/titles for "global awareness" (very compact)
+    const allApproved = await fetchAllContent();
+    const coverageMap = allApproved.reduce((acc: any, item: any) => {
+      acc[item.district] = (acc[item.district] || 0) + 1;
+      return acc;
+    }, {});
+    const coverageInfo = Object.entries(coverageMap)
+      .map(([dist, count]) => `${dist}(${count} stories)`)
+      .join(', ');
 
     const systemPrompt = {
       role: 'system' as const,
-      content: `You are "Sila", a friendly AI guide for Assam, India. 
-      Context: ${contentContext}
-      User Context: ${extraContext}
-      Rules: Be warm, mention the district, keep answers concise. If unsure, use general knowledge about Assam.`
+      content: `You are "Sila", an AI travel guide for OxomiAi. 
+      Available Stories: ${coverageInfo}
+      Detailed Context: ${contentContext}
+      Current Page: ${districtId || 'Home'}
+      Rules: Be warm, mention the district. If asked about a district not in 'Detailed Context' but in 'Available Stories', tell them we have content there and invite them to visit that district's page. Keep answers concise.`
     };
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {

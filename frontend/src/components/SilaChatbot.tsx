@@ -51,9 +51,7 @@ const SilaChatbot: React.FC = () => {
         content: m.content
       }));
 
-      // Add district context if present
-      const currentDistrict = districtId ? `The user is currently viewing information about ${districtId}.` : '';
-      const response = await getSilaResponse(chatHistory, currentDistrict);
+      const response = await getSilaResponse(chatHistory, districtId);
       setMessages((prev) => [...prev, { role: 'assistant', content: response }]);
     } catch (error) {
       console.error(error);
