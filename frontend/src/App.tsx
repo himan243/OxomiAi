@@ -8,7 +8,7 @@ import Itinerary from './pages/Itinerary';
 import AdminDashboard from './pages/AdminDashboard';
 import Library from './pages/Library';
 import Culture from './pages/Culture';
-import SilaChatbot from './components/SilaChatbot';
+// import SilaChatbot from './components/SilaChatbot';
 import './App.css';
 
 const ScrollToTop = () => {
