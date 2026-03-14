@@ -143,7 +143,7 @@ const App: React.FC = () => {
           <AnimatedRoutes />
         </main>
 
-        <SilaChatbot />
+        {/* <SilaChatbot /> */}
 
         <footer className="bg-stone-950 text-stone-500 py-20 px-6 text-center relative overflow-hidden">
           <div className="container mx-auto relative z-10">
